@@ -104,7 +104,7 @@
             <h2 class="text-3xl font-extrabold text-center tracking-widest uppercase mb-1"
                 style="color: #1B5E20;">MAPUL</h2>
             <p class="text-center text-gray-500 text-sm font-medium mb-1 tracking-wider">Mie Ayam Pulean</p>
-            <p class="text-center text-gray-400 text-xs mb-6">Point of Sale System</p>
+        
 
             <!-- Divider -->
             <div class="flex items-center justify-center space-x-3 mb-7 opacity-50">
