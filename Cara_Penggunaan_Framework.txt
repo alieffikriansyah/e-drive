@@ -1,0 +1,253 @@
+=============================================================================
+             PANDUAN LENGKAP PENGGUNAAN FRAMEWORK NATIVE HMVC
+=============================================================================
+
+Selamat datang di Framework Native HMVC! Framework ini dibuat agar Anda bisa ngoding dengan rapi, terstruktur, bebas ribet, tapi tetap ringan tanpa perlu mempelajari perintah-perintah framework raksasa yang terlalu kompleks.
+
+Panduan ini ditulis sesederhana mungkin agar developer pemula bisa langsung "Gas Ngoding!".
+
+-----------------------------------------------------------------------------
+1. SYSTEM REQUIREMENTS (Kebutuhan Sistem)
+-----------------------------------------------------------------------------
+Sebelum Anda bisa menjalankan framework ini, pastikan komputer/server Anda memenuhi syarat minimum berikut:
+- PHP versi 7.4 ke atas (Sangat direkomendasikan PHP 8.x).
+- Web Server: Apache (wajib jika ingin menggunakan `.htaccess` bawaan secara langsung) atau Nginx.
+- Ekstensi PHP yang wajib aktif:
+  * PDO (PHP Data Objects) -> Sebagai nyawa untuk koneksi ke database.
+  * PDO_MySQL -> Agar PDO bisa berkomunikasi khusus dengan database MySQL/MariaDB.
+  * mbstring & json -> Standar bawaan PHP modern yang sering dipakai.
+- Database: MySQL atau MariaDB versi terbaru.
+
+-----------------------------------------------------------------------------
+2. APA ITU ARSITEKTUR HMVC?
+-----------------------------------------------------------------------------
+Pasti Anda sudah kenal MVC (Model - View - Controller). 
+Nah, HMVC adalah singkatan dari "Hierarchical Model View Controller".
+Bedanya apa?
+- MVC Biasa: Semua Controller ngumpul di satu folder, semua Model di satu folder, semua View numpuk di satu folder. Lama-lama bikin pusing nyarinya kalau fiturnya sudah banyak.
+- HMVC: Kita memecah sistem menjadi "Modul-Modul". Satu Modul itu ibarat "Satu Fitur Lengkap".
+  Misalnya fitur "Pengguna", Anda tinggal buat folder `users` di dalam folder `modules`. Di dalam folder `users` itulah Controller, Model, dan View-nya bersarang.
+  Jauh lebih rapi, terpisah (isolated), dan gampang kalau mau di-copy-paste fiturnya ke proyek (website) lain!
+
+-----------------------------------------------------------------------------
+3. BEDAH STRUKTUR DIREKTORI & FILE INTI
+-----------------------------------------------------------------------------
+Mari kita jalan-jalan melihat apa saja isi perut dari framework ini.
+
+[A] FOLDER PENTING:
+
+1. app/
+   Ini adalah jantung atau "mesin" dari framework. Isinya:
+   * config/ -> Tempat pengaturan dasar (misal config.php untuk mengatur base_url otomatis & default_controller).
+   * core/ -> Kumpulan mesin utama seperti jembatan Database, pengatur jalurnya URL (Router), Session, dan base class Controller & Model. Jangan diotak-atik jika tidak terpaksa!
+   * middleware/ -> Tempat menyimpan pos satpam (kode penjaga). Misal `AuthMiddleware` yang mencegah tamu tak diundang masuk ke dalam Dashboard sebelum login.
+   * views/layout/ -> Berisi template kerangka wujud website, seperti `header.php` (navbar atas) dan `footer.php` (bawah).
+
+2. assets/
+   Tempat menyimpan "pemanis" web yang bisa ditarik langsung oleh browser (publik).
+   Contohnya: file CSS (Tailwind), script animasi (.js), gambar/logo (seperti logo.png), dan ikon-ikon (FontAwesome).
+
+3. modules/
+   🔥 INI ADALAH LAPANGAN BERMAIN ANDA! 🔥
+   Semua fitur buatan Anda diletakkan di sini. Struktur di dalamnya selalu berupa:
+   modules/
+     namamodul/
+       controllers/
+       models/ (Cukup copy-paste file MOD.php ke folder ini)
+       views/
+
+4. upload/
+   Folder kosong khusus sebagai bak penampung file yang diunggah oleh user (seperti foto profil, dokumen PDF, scan KTP, dll). 
+   Sangat Penting: Pastikan folder ini punya hak akses Tulis (Write Permission) agar PHP tidak error saat menyimpan file ke dalamnya.
+
+5. vendor/
+   Ini adalah folder otomatis buatan Composer. Berisi library eksternal (pihak ketiga) jika Anda menggunakannya. Anda tidak perlu menyentuhnya secara manual.
+
+[B] FILE KRUSIAL (TOLONG JANGAN SAMPAI TERHAPUS!):
+
+1. .env
+   Ini adalah file "SANGAT RAHASIA" penyimpan kunci-kunci sistem. 
+   Di sinilah Anda mengatur: 
+   * Informasi Database (DB_HOST, DB_NAME, DB_USER, DB_PASS).
+   * BASE_URL -> Wajib diisi! Contoh: `BASE_URL=localhost/framework_baru/` (Tidak perlu menuliskan http:// atau https:// karena sistem kita sudah pintar menebaknya).
+   * Status Aplikasi (APP_ENV=development atau production).
+
+2. .htaccess
+   File ajaib khusus web server Apache. 
+   Tugas utamanya adalah "Mempercantik URL". Berkat file ini, Anda tidak perlu mengetik "index.php" di URL. Semua request otomatis ditangkap dan dibelokkan ke file `index.php` secara sembunyi-sembunyi di balik layar.
+
+3. index.php
+   File garda terdepan! (Front Controller). Ini adalah SATU-SATUNYA file PHP yang pertama kali dipanggil saat pengunjung membuka website. 
+   Tugasnya: memanggil file `.env`, mengatur pelaporan error, memuat core system, dan akhirnya melempar bola ke "Router" untuk mencari Modul mana yang harus dijalankan.
+
+-----------------------------------------------------------------------------
+4. CARA PENGIMPLEMENTASIAN (TUTORIAL NGODING)
+-----------------------------------------------------------------------------
+Sekarang mari kita praktek. Ikuti alur ini kalau Anda mau bikin fitur baru.
+Skenario: Kita ingin membuat halaman daftar "Buku".
+
+LANGKAH 1: Buat Folder Modul
+- Pergi ke folder `modules/`.
+- Bikin folder baru bernama `buku`.
+- Di dalam `modules/buku/`, buat tiga folder kosong: `controllers`, `models`, dan `views`.
+
+LANGKAH 2: Bikin Controller (Sang Pengatur Jalan)
+- Di dalam `modules/buku/controllers/`, buat file bernama `Buku.php` (Huruf B wajib Kapital!).
+- Isi kodenya:
+  <?php
+  class Buku extends Controller {
+      public function index() {
+          // Siapkan data variabel untuk dilempar ke tampilan
+          $data['judul_halaman'] = "Daftar Koleksi Buku";
+          
+          // Panggil tampilan (View)
+          $this->load->view('buku/views/index', $data);
+      }
+  }
+  ?>
+
+LANGKAH 3: Bikin View (Tampilan Antarmuka)
+- Di dalam `modules/buku/views/`, buat file `index.php`.
+- Isi dengan HTML/PHP biasa:
+  <?php require_once APPPATH . 'views/layout/header.php'; // Panggil navbar ?>
+  
+  <div class="p-8">
+      <!-- Variabel $judul_halaman kita dapatkan dari controller tadi -->
+      <h1 class="text-2xl font-bold"><?= $judul_halaman; ?></h1>
+      <p>Halo dunia! Ini adalah halaman buku buatan saya.</p>
+  </div>
+  
+  <?php require_once APPPATH . 'views/layout/footer.php'; // Panggil footer ?>
+
+Sekarang coba buka browser: http://localhost/framework_baru/buku
+Boom! Halaman Anda sudah jadi!
+
+LANGKAH 4 (Opsional): Bikin Model (Jika Mau Ambil Data Dari Database)
+Alih-alih membuat file Model baru dari awal dan menulis fungsi CRUD berulang kali, Anda CUKUP melakukan copy-paste file `MOD.php` (Model Universal) dari modul lain (misalnya dari folder `modules/users/models/MOD.php`) ke dalam folder `modules/buku/models/`.
+
+Lalu, panggil dan gunakan langsung di Controller `Buku.php`:
+  <?php
+  class Buku extends Controller {
+      public function index() {
+          // 1. Panggil MOD.php dan beri nama panggilan (alias) 'mod'
+          $this->load->model('buku/MOD', 'mod');
+          
+          // 2. Gunakan fungsi bawaan mod untuk menarik data database
+          // Contoh: Ambil semua data dari tabel_buku urut id menurun
+          $data['list_buku'] = $this->mod->getData('tabel_buku', 'id desc');
+          
+          $this->load->view('buku/views/index', $data);
+      }
+  }
+  ?>
+
+Sangat cepat dan gampang, kan? Anda tidak perlu lagi menulis fungsi get(), insert(), update(), atau delete() secara manual!
+
+-----------------------------------------------------------------------------
+5. MENGGUNAKAN QUERY BUILDER (DATABASE)
+-----------------------------------------------------------------------------
+Framework ini sudah dilengkapi dengan Query Builder canggih layaknya CodeIgniter 3. Anda tidak perlu lagi menulis query SQL manual secara utuh!
+
+Contoh Penggunaan:
+
+// 1. Mengambil Semua Data (sebagai Object)
+$data = $this->db->table('users')->get()->result();
+
+// 2. Mengambil Satu Baris Data (Row Object)
+$user = $this->db->table('users')->where('id', 1)->get()->row();
+
+// 3. Menambahkan Data (Insert)
+$data_baru = ['name' => 'Budi', 'username' => 'budi123'];
+$this->db->table('users')->insert($data_baru);
+
+// 4. Mengubah Data (Update)
+$data_ubah = ['name' => 'Budi Sudarsono'];
+$this->db->table('users')->where('id', 1)->update($data_ubah);
+
+// 5. Menghapus Data (Delete)
+$this->db->table('users')->where('id', 1)->delete();
+
+// 6. Query Kompleks (Select, Join, Where In, Like, Order By, Limit)
+$hasil = $this->db->table('users')
+         ->select('users.*, roles.role_name')
+         ->join('roles', 'users.role_id = roles.id', 'LEFT')
+         ->where_in('users.status', [0, 1])
+         ->like('users.name', 'Budi')
+         ->order_by('users.id', 'DESC')
+         ->limit(10)
+         ->get()
+         ->result_array(); // result_array() mengembalikan data sebagai Array
+
+Query builder ini secara otomatis mengamankan (escape) inputan dari SQL Injection!
+
+
+-----------------------------------------------------------------------------
+6. PENGGUNAAN MODEL UNIVERSAL (MOD.php)
+-----------------------------------------------------------------------------
+Untuk memaksimalkan produktivitas, Framework ini membekali fitur `MOD.php` (Model Universal Template) di dalam folder models setiap modul.
+
+Dengan `MOD.php`, Anda tidak perlu lagi menulis fungsi-fungsi dasar CRUD yang berulang-ulang di dalam setiap class Model.
+
+Cara Memanggil MOD.php di Controller:
+  // Kita beri nama alias 'mod' agar rapi dan dinamis
+  $this->load->model('nama_modul/MOD', 'mod');
+
+Contoh Penggunaan Praktis di Controller:
+  // Mengambil semua data users urut ID menurun
+  $users = $this->mod->getData('users', 'id desc');
+
+  // Mengambil 1 data user spesifik
+  $user = $this->mod->getDataWhere('users', 'id', 5);
+
+  // Menghitung jumlah data user yang aktif
+  $jumlah = $this->mod->CountData('users', 'id', ['status' => 0]);
+
+  // Insert (Menyimpan) data baru
+  $this->mod->insert('users', ['name' => 'Andi']);
+
+  // Update data user di mana id = 5
+  $this->mod->update('users', 'id', 5, ['name' => 'Andi Baru']);
+
+  // Hapus data (Soft Delete)
+  $this->mod->delete('users', 'id', 5);
+
+Gunakan fungsi bawaan `MOD.php` ini langsung di Controller, dan biarkan hidup Anda menjadi lebih tenang!
+
+
+-----------------------------------------------------------------------------
+SELAMAT NGODING!
+Semoga framework ini mempermudah langkah Anda membuat project-project luar biasa. 
+=============================================================================
+
+
+_____________________________________________________________________________
+
+catatan production
+_____________________________________________________________________________
+
+File .env yang Anda tunjukkan TIDAK AMAN dan TIDAK BISA langsung dijalankan jika di-deploy ke Hosting atau Server Production (Internet). Anda wajib melakukan penyesuaian!
+
+Berikut adalah rincian apa saja yang harus Anda ubah di dalam file .env sebelum website dilepas ke publik (Production):
+
+1. Keamanan & Lingkungan (Environment)
+
+env
+APP_ENV=production   <-- (Ubah dari 'development' menjadi 'production')
+APP_DEBUG=false      <-- (Ubah dari 'true' menjadi 'false')
+Kenapa? Mengubah ke production dan false akan mematikan fitur super admin (master password) dan menyembunyikan pesan-pesan error (seperti pesan error database atau sintaks). Jika pesan error dibiarkan tampil di production, peretas (hacker) bisa membaca struktur database Anda!
+2. Koneksi Database
+
+env
+DB_HOST=localhost                   <-- (Bisa tetap 'localhost' jika DB berada di server yg sama)
+DB_NAME=nama_db_di_hosting_anda     <-- (Ubah sesuai nama DB di CPanel/Hosting)
+DB_USER=user_db_di_hosting_anda     <-- (Ubah sesuai user DB di CPanel/Hosting)
+DB_PASS=password_rahasia_anda       <-- (WAJIB diisi! Tidak boleh kosong seperti di XAMPP)
+Kenapa? Di server nyata (hosting), Anda harus membuat database dan user baru yang dilengkapi password demi keamanan. Jika Anda biarkan isi .env seperti XAMPP (root tanpa password), website pasti akan error gagal terkoneksi.
+3. BASE_URL
+
+env
+BASE_URL=www.domainanda.com/    <-- (Ubah menjadi nama domain Anda yang sebenarnya)
+Kenapa? Aplikasi menggunakan BASE_URL ini untuk menentukan link ke seluruh aset (CSS/JS) dan menu-menu. Jika dibiarkan localhost/framework_baru/, maka pengunjung dari internet tidak akan bisa memuat CSS maupun membuka halaman apa pun (halaman akan terlihat berantakan).
+TIP
+
+Saran Praktis Saat Deployment: Pastikan juga file .env ini tidak bisa dibaca/di-download langsung oleh publik dari browser. File .htaccess bawaan framework ini biasanya sudah mengamankan hal tersebut.
