@@ -429,6 +429,10 @@ class Database {
 
         $this->query($sql, array_values($data));
         $id = $this->pdo->lastInsertId();
+        
+        // Auto Log
+        $this->_auto_log('TAMBAH_DATA', $table, 'User menambah data ke tabel ' . $table . '. ID: ' . $id . '. Data: ' . json_encode($data));
+        
         $this->_reset_builder();
         return $id;
     }
@@ -467,8 +471,13 @@ class Database {
         }
 
         $this->query($sql, $values);
+        $rowCount = $this->stmt->rowCount();
+        
+        // Auto Log
+        $this->_auto_log('UBAH_DATA', $table, 'User mengubah data di tabel ' . $table . '. Kriteria: ' . json_encode($this->wheres) . '. Data baru: ' . json_encode($data));
+        
         $this->_reset_builder();
-        return $this->stmt->rowCount();
+        return $rowCount;
     }
 
     public function delete($table = '', $where = null) {
@@ -495,8 +504,13 @@ class Database {
         }
         
         $this->query($sql, $this->params);
+        $rowCount = $this->stmt->rowCount();
+        
+        // Auto Log
+        $this->_auto_log('HAPUS_DATA', $table, 'User menghapus data di tabel ' . $table . '. Kriteria: ' . json_encode($this->wheres));
+        
         $this->_reset_builder();
-        return $this->stmt->rowCount();
+        return $rowCount;
     }
     
     public function empty_table($table = '') {
@@ -531,5 +545,28 @@ class Database {
     public function with_trashed() {
         $this->skip_status_filter = true;
         return $this;
+    }
+
+    private function _auto_log($action, $table, $keterangan) {
+        // Prevent infinite loop if logging into log_record_users itself
+        if ($table === 'log_record_users') return;
+        
+        // Cek session
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $user_id = $_SESSION['user_id'] ?? null;
+        if (!$user_id) return; // Do not log if it's not a user action (e.g., system background tasks)
+
+        $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+        
+        $sql = "INSERT INTO log_record_users (id_user, action, keterangan, ip_address, created_at) VALUES (?, ?, ?, ?, NOW())";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$user_id, $action, $keterangan, $ip_address]);
+        } catch (\Throwable $e) {
+            // Abaikan error pada logging agar transaksi utama tidak gagal
+        }
     }
 }

@@ -2,13 +2,14 @@
 
 require_once APPPATH . 'middleware/AuthMiddleware.php';
 
-class Hapus_keseluruhan_data extends Controller
+class HapusKeseluruhanData extends Controller
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->helper('url');
-        $this->load->model('hapus_keseluruhan_data/MOD', 'mod');
+        require_once MODULESPATH . 'hapus_keseluruhan_data/models/MOD.php';
+        $this->MOD = new MOD();
     }
 
     public function _middleware()
@@ -42,7 +43,7 @@ class Hapus_keseluruhan_data extends Controller
                 exit;
             }
 
-            $success = $this->mod->truncate_semua();
+            $success = $this->MOD->truncate_semua();
 
             header('Content-Type: application/json');
             if ($success) {

@@ -2,13 +2,14 @@
 
 require_once APPPATH . 'middleware/AuthMiddleware.php';
 
-class Log_record_users extends Controller
+class LogRecordUsers extends Controller
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->helper('url');
-        $this->load->model('log_record_users/MOD', 'mod');
+        require_once MODULESPATH . 'log_record_users/models/MOD.php';
+        $this->MOD = new MOD();
     }
 
     public function _middleware()
@@ -38,7 +39,7 @@ class Log_record_users extends Controller
             if ($password === $master_password) {
                 $_SESSION['log_record_authenticated'] = true;
                 header('Content-Type: application/json');
-                echo json_encode(['status' => true]);
+                echo json_encode(['status' => true, 'message' => 'Berhasil autentikasi.']);
             } else {
                 header('Content-Type: application/json');
                 echo json_encode(['status' => false, 'message' => 'Password salah!']);
@@ -49,19 +50,20 @@ class Log_record_users extends Controller
 
     public function load_data()
     {
+        // Harus sudah autentikasi
         if (empty($_SESSION['log_record_authenticated'])) {
             header('Content-Type: application/json');
-            echo json_encode(['status' => false, 'message' => 'Sesi habis, silakan masukkan password lagi.']);
+            echo json_encode(['status' => false, 'message' => 'Silakan masukkan password terlebih dahulu.']);
             exit;
         }
 
-        $tgl_awal = $this->input->xss_clean($_GET['tgl_awal'] ?? date('Y-m-d'));
-        $tgl_akhir = $this->input->xss_clean($_GET['tgl_akhir'] ?? date('Y-m-d'));
+        $tgl_awal = $this->input->xss_clean($_GET['tgl_awal'] ?? '');
+        $tgl_akhir = $this->input->xss_clean($_GET['tgl_akhir'] ?? '');
 
-        $data = $this->mod->get_logs($tgl_awal, $tgl_akhir);
+        $logs = $this->MOD->get_logs($tgl_awal, $tgl_akhir);
 
         header('Content-Type: application/json');
-        echo json_encode(['status' => true, 'data' => $data]);
+        echo json_encode(['status' => true, 'data' => $logs]);
         exit;
     }
 }

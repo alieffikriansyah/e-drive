@@ -29,6 +29,7 @@ class Penjualan extends Controller
     {
         parent::__construct();
         $this->load->helper('url');
+        require_once APPPATH . 'helpers/log_helper.php';
         $this->load->model('penjualan/MOD', 'mod');
     }
 
@@ -387,12 +388,16 @@ class Penjualan extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id = $_SESSION['user_id'] ?? 0;
 
+            // Get nota info before deleting for logging
+            $nota = $this->db->query("SELECT no_nota, total_bayar FROM penjualan WHERE id = ?", [$id])->fetch(PDO::FETCH_ASSOC);
+
             $delete = $this->db->table('penjualan')->where('id', $id)->delete();
 
             header('Content-Type: application/json');
             if ($delete) {
                 // Update updated_by untuk audit trail.
                 $this->db->table('penjualan')->where('id', $id)->update(['updated_by' => $user_id]);
+                
                 echo json_encode(['status' => true, 'message' => 'Transaksi berhasil di-void. Koreksi stok jika diperlukan.']);
             } else {
                 echo json_encode(['status' => false, 'message' => 'Gagal mem-void transaksi']);
