@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           # Karena Anda menggunakan akun FTP utama cPanel untuk subdomain pulean.digitalreportelektrikal.com,
           # kita arahkan file agar diupload ke folder subdomain tersebut:
-          server-dir: public_html/pulean.digitalrepo/
+          server-dir: public_html/pulean.digitalreportelektrikal.com/
           
           exclude: |
             **/.git*
