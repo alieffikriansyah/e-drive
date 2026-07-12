@@ -2,18 +2,22 @@
 
 require_once APPPATH . 'middleware/AuthMiddleware.php';
 
-class Dashboard extends Controller {
-    public function __construct() {
+class Dashboard extends Controller
+{
+    public function __construct()
+    {
         parent::__construct();
         $this->load->helper('url');
     }
 
-    public function _middleware() {
+    public function _middleware()
+    {
         AuthMiddleware::check();
     }
 
-    public function index() {
-        $user_role   = strtolower($_SESSION['role_name'] ?? '');
+    public function index()
+    {
+        $user_role = strtolower($_SESSION['role_name'] ?? '');
         $user_cabang = $_SESSION['id_cabang'] ?? 0;
 
         if (in_array($user_role, ['owner', 'admin'])) {
@@ -23,23 +27,24 @@ class Dashboard extends Controller {
         }
 
         $data = [
-            'title'  => 'Dashboard',
+            'title' => 'Dashboard',
             'cabang' => $cabang,
         ];
         $this->load->view('dashboard/v_index', $data);
     }
 
-    public function get_data() {
+    public function get_data()
+    {
         $id_cabang_session = $_SESSION['id_cabang'] ?? 0;
-        $role              = strtolower($_SESSION['role_name'] ?? '');
-        $is_admin          = in_array($role, ['owner', 'admin']);
-        $today             = date('Y-m-d');
-        $bulan             = date('Y-m');
+        $role = strtolower($_SESSION['role_name'] ?? '');
+        $is_admin = in_array($role, ['owner', 'admin']);
+        $today = date('Y-m-d');
+        $bulan = date('Y-m');
 
         // Filter cabang: admin bisa pilih via GET, selain admin pakai cabang session
         $id_cabang = $is_admin
-            ? (int)($_GET['id_cabang'] ?? 0)
-            : (int)$id_cabang_session;
+            ? (int) ($_GET['id_cabang'] ?? 0)
+            : (int) $id_cabang_session;
 
         // Omzet & transaksi hari ini
         $where_penjualan = ($id_cabang > 0) ? "AND id_cabang = $id_cabang" : '';
@@ -93,17 +98,88 @@ class Dashboard extends Controller {
         ")->result();
 
         $data = [
-            'omzet_hari'         => $hari['omzet']           ?? 0,
-            'total_transaksi'    => $hari['total_transaksi']  ?? 0,
-            'laba_bersih_hari'   => $laba_bersih_hari,
-            'omzet_bulan'        => $bulan_data['omzet_bulan'] ?? 0,
-            'stok_menipis'       => $stok_menipis['jumlah']   ?? 0,
-            'produk_menipis'     => $produk_menipis,
+            'omzet_hari' => $hari['omzet'] ?? 0,
+            'total_transaksi' => $hari['total_transaksi'] ?? 0,
+            'laba_bersih_hari' => $laba_bersih_hari,
+            'operasional_hari' => $ops_hari['total_ops'] ?? 0,
+            'omzet_bulan' => $bulan_data['omzet_bulan'] ?? 0,
+            'stok_menipis' => $stok_menipis['jumlah'] ?? 0,
+            'produk_menipis' => $produk_menipis,
             'transaksi_terakhir' => $transaksi_terakhir,
         ];
 
         header('Content-Type: application/json');
         echo json_encode(['status' => true, 'data' => $data]);
+        exit;
+    }
+
+    public function get_chart_terlaris()
+    {
+        $id_cabang_session = $_SESSION['id_cabang'] ?? 0;
+        $role              = strtolower($_SESSION['role_name'] ?? '');
+        $is_admin          = in_array($role, ['owner', 'admin']);
+        
+        $id_cabang = $is_admin
+            ? (int)($_GET['id_cabang'] ?? 0)
+            : (int)$id_cabang_session;
+            
+        $periode = $_GET['periode'] ?? 'hari_ini';
+        
+        $today = date('Y-m-d');
+        if ($periode === 'hari_ini') {
+            $tgl_awal = $today;
+            $tgl_akhir = $today;
+        } elseif ($periode === 'minggu_ini') {
+            $tgl_awal = date('Y-m-d', strtotime('monday this week'));
+            $tgl_akhir = date('Y-m-d', strtotime('sunday this week'));
+        } elseif ($periode === 'bulan_ini') {
+            $tgl_awal = date('Y-m-01');
+            $tgl_akhir = date('Y-m-t');
+        } elseif ($periode === '3_bulan') {
+            $tgl_awal = date('Y-m-d', strtotime('-3 months'));
+            $tgl_akhir = $today;
+        } elseif ($periode === '6_bulan') {
+            $tgl_awal = date('Y-m-d', strtotime('-6 months'));
+            $tgl_akhir = $today;
+        } elseif ($periode === 'tahun_ini') {
+            $tgl_awal = date('Y-01-01');
+            $tgl_akhir = date('Y-12-31');
+        } else {
+            $tgl_awal = $today;
+            $tgl_akhir = $today;
+        }
+
+        $where_cabang = $id_cabang > 0 ? "AND pj.id_cabang = $id_cabang" : '';
+
+        // Query top 10 products
+        $data = $this->db->query("
+            SELECT
+                p.nama_produk,
+                SUM(dp.jumlah_beli)  AS total_terjual
+            FROM detail_penjualan dp
+            JOIN penjualan pj ON dp.id_penjualan = pj.id
+            JOIN produk    p  ON dp.id_produk    = p.id
+            WHERE dp.status != 8 AND pj.status != 8
+              AND DATE(pj.tanggal_transaksi) BETWEEN ? AND ?
+              $where_cabang
+            GROUP BY p.id, p.nama_produk
+            ORDER BY total_terjual DESC
+            LIMIT 10
+        ", [$tgl_awal, $tgl_akhir])->result();
+        
+        $labels = [];
+        $totals = [];
+        foreach($data as $d) {
+            $labels[] = $d->nama_produk;
+            $totals[] = (int) $d->total_terjual;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => true,
+            'labels' => $labels,
+            'data'   => $totals
+        ]);
         exit;
     }
 }

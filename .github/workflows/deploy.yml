@@ -1,0 +1,31 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: Deploy to cPanel FTP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest code
+        uses: actions/checkout@v4
+        
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Karena Anda menggunakan akun FTP utama cPanel untuk subdomain pulean.digitalreportelektrikal.com,
+          # kita arahkan file agar diupload ke folder subdomain tersebut:
+          server-dir: public_html/pulean.digitalrepo/
+          
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            pos_warung_backup.sql
+            Cara_Penggunaan_Framework.txt

@@ -48,7 +48,7 @@ class Laporan extends Controller {
             $id_cabang_filter = (int)$user_cabang;
         }
 
-        $where_cabang_pj  = $id_cabang_filter > 0 ? "AND pj.id_cabang = $id_cabang_filter" : '';
+        $where_cabang_pj  = $id_cabang_filter > 0 ? "AND id_cabang = $id_cabang_filter" : '';
         $where_cabang_ops = $id_cabang_filter > 0 ? "AND id_cabang = $id_cabang_filter"     : '';
         $where_cabang_c   = $id_cabang_filter > 0 ? "AND c.id = $id_cabang_filter"           : '';
 
@@ -280,7 +280,7 @@ class Laporan extends Controller {
         $periode = ($nama_bulan[$bulan] ?? $bulan) . ' ' . $tahun;
 
         // Ambil data sama persis seperti laba_rugi_bulanan().
-        $where_cabang_pj  = $id_cabang_filter > 0 ? "AND pj.id_cabang = $id_cabang_filter" : '';
+        $where_cabang_pj  = $id_cabang_filter > 0 ? "AND id_cabang = $id_cabang_filter" : '';
         $where_cabang_ops = $id_cabang_filter > 0 ? "AND id_cabang = $id_cabang_filter"     : '';
         $where_cabang_c   = $id_cabang_filter > 0 ? "AND c.id = $id_cabang_filter"           : '';
 

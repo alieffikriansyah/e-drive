@@ -192,9 +192,12 @@
     </div>
 </div>
 
+
+
 <script>
     const BASE = '<?= base_url() ?>';
     const IS_ADMIN = <?= in_array(strtolower($_SESSION['role_name'] ?? ''), ['owner', 'admin']) ? 'true' : 'false' ?>;
+    let currentData = [];
 
     function rp(n) {
         return 'Rp ' + Number(n).toLocaleString('id-ID');
@@ -241,6 +244,8 @@
             let totalPendapatan = 0, totalDiskon = 0;
             let rows = '';
 
+            currentData = json.data;
+
             json.data.forEach(function (d, i) {
                 totalPendapatan += parseFloat(d.total_bayar || 0);
                 totalDiskon += parseFloat(d.total_diskon || 0);
@@ -259,7 +264,13 @@
                     '<td class="text-right font-bold text-sm">' + rp(d.total_bayar) + '</td>' +
                     '<td class="text-right text-sm text-red-500">' + diskonHtml + '</td>' +
                     '<td class="text-center">' + metodeBadge(d.metode_bayar) + '</td>' +
-                    '<td class="text-center"><button onclick="openNota(' + d.id + ')" class="inline-flex items-center gap-1 bg-mapul-green hover:bg-mapul-green-md text-white text-xs font-bold px-3 py-1.5 rounded transition-colors shadow-sm"><i class="fa fa-receipt"></i> Nota</button></td>' +
+                    '<td class="text-center flex flex-wrap justify-center gap-1">' + 
+                    '<button onclick="openNota(' + d.id + ')" class="inline-flex items-center gap-1 bg-mapul-green hover:bg-mapul-green-md text-white text-xs font-bold px-3 py-1.5 rounded transition-colors shadow-sm"><i class="fa fa-receipt"></i> Nota</button>' +
+                    (IS_ADMIN ? 
+                        '<a href="' + BASE + 'list_penjualan/edit_transaksi/' + d.id + '" class="inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors shadow-sm"><i class="fa fa-edit"></i> Edit Transaksi / Keranjang</a>' +
+                        '<button onclick="deletePenjualan(' + d.id + ')" class="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors shadow-sm"><i class="fa fa-trash"></i> Hapus</button>' 
+                    : '') +
+                    '</td>' +
                     '</tr>';
             });
 
@@ -437,6 +448,32 @@
         w.document.close();
         w.focus();
         setTimeout(function () { w.print(); }, 400);
+    }
+
+    function deletePenjualan(id) {
+        Swal.fire({
+            title: 'Hapus Transaksi?',
+            text: "Data yang dihapus tidak bisa dikembalikan (soft delete).",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(BASE + 'list_penjualan/delete/' + id, { method: 'POST' })
+                .then(res => res.json())
+                .then(json => {
+                    if (json.status) {
+                        Swal.fire('Terhapus!', json.message, 'success');
+                        loadData();
+                    } else {
+                        Swal.fire('Gagal!', json.message, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'));
+            }
+        });
     }
 
     document.addEventListener('DOMContentLoaded', loadData);
