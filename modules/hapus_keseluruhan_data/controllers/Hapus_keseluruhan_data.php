@@ -32,8 +32,11 @@ class Hapus_keseluruhan_data extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password = $this->input->xss_clean($_POST['password'] ?? '');
 
-            // Autentikasi akusangkuasa
-            if ($password !== 'akusangkuasa') {
+            global $config;
+            $master_password = $config['master_password'] ?? 'akusangkuasa';
+
+            // Autentikasi master password
+            if ($password !== $master_password) {
                 header('Content-Type: application/json');
                 echo json_encode(['status' => false, 'message' => 'Password salah!']);
                 exit;

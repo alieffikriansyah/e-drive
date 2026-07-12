@@ -32,7 +32,10 @@ class Log_record_users extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password = $this->input->xss_clean($_POST['password'] ?? '');
 
-            if ($password === 'akusangkuasa') {
+            global $config;
+            $master_password = $config['master_password'] ?? 'akusangkuasa';
+
+            if ($password === $master_password) {
                 $_SESSION['log_record_authenticated'] = true;
                 header('Content-Type: application/json');
                 echo json_encode(['status' => true]);
