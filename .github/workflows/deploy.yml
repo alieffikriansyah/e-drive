@@ -27,5 +27,6 @@ jobs:
             **/.git*
             **/.git*/**
             .github/**
+            .env
             pos_warung_backup.sql
             Cara_Penggunaan_Framework.txt
