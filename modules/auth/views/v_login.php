@@ -165,7 +165,7 @@
             <!-- Footer -->
             <div class="mt-7 text-center text-xs text-gray-400 font-medium border-t border-gray-100 pt-5">
                 &copy; <?= date('Y') ?> <span class="font-bold text-green-700">MAPUL</span> Mie Ayam Pulean
-                <span class="mx-1 text-mapul-yellow">•</span> POS System
+                <span class="mx-1 text-mapul-yellow">
             </div>
         </div>
     </div>
