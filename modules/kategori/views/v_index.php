@@ -48,6 +48,20 @@
                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Nama Kategori</label>
                 <input type="text" id="nama_kategori" name="nama_kategori" required class="mapul-input" placeholder="Misal: Makanan, Minuman">
             </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Jenis</label>
+                <select id="jenis" name="jenis" required class="mapul-input w-full p-2 border rounded">
+                    <option value="bahan_baku">Bahan Baku</option>
+                    <option value="setengah_jadi">Setengah Jadi</option>
+                    <option value="produk_jadi">Produk Jadi</option>
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Keterangan</label>
+                <textarea id="keterangan" name="keterangan" class="mapul-input w-full p-2 border rounded" placeholder="Keterangan tambahan (opsional)"></textarea>
+            </div>
             
             <div class="pt-4 border-t border-gray-200 flex justify-end gap-3">
                 <button type="button" onclick="closeModal()" class="px-6 py-2 bg-white text-gray-700 font-medium rounded border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm">Batal</button>
@@ -147,6 +161,8 @@
                     
                     document.getElementById('id').value = data.id;
                     document.getElementById('nama_kategori').value = data.nama_kategori;
+                    document.getElementById('jenis').value = data.jenis;
+                    document.getElementById('keterangan').value = data.keterangan;
                 } else {
                     Swal.fire('Error', 'Gagal mengambil data', 'error');
                 }

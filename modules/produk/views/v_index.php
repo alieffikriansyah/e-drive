@@ -112,8 +112,8 @@
                 <div class="space-y-1">
                     <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Harga Jual <span class="text-red-500">*</span></label>
                     <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-gray-500 font-bold text-sm">Rp</span>
-                        <input type="number" step="1" id="harga_jual" name="harga_jual" class="mapul-input pl-10" placeholder="15000" value="0">
+                        <span class="absolute left-3 top-2.5 text-gray-500 font-bold text-sm z-10">Rp</span>
+                        <input type="number" step="1" id="harga_jual" name="harga_jual" class="mapul-input pl-10" style="padding-left: 2.5rem;" placeholder="15000" value="0">
                     </div>
                     <p class="text-[10px] text-gray-400 mt-1">* Akan otomatis tersimpan sebagai harga paten untuk kasir</p>
                 </div>

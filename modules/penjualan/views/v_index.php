@@ -76,16 +76,18 @@
                 <?php else: ?>
                     <?php foreach ($menu_kasir as $menu): ?>
                         <div class="menu-card bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:shadow-lg hover:border-mapul-yellow transition-all group flex flex-col justify-between"
-                            onclick="addToCart(<?= $menu->id_harga_paten ?>, '<?= addslashes(htmlspecialchars($menu->nama_menu)) ?>', <?= (float)$menu->harga_jual_paten ?>)"
+                            onclick="addToCart(<?= $menu->id_harga_paten ?>, '<?= addslashes(htmlspecialchars($menu->nama_menu)) ?>', <?= (float) $menu->harga_jual_paten ?>)"
                             data-nama="<?= strtolower($menu->nama_menu) ?>"
                             data-kategori="<?= strtolower($menu->nama_kategori) ?>">
 
                             <div>
                                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                                    <?= htmlspecialchars($menu->nama_kategori) ?></div>
+                                    <?= htmlspecialchars($menu->nama_kategori) ?>
+                                </div>
                                 <h3
                                     class="font-bold text-gray-800 leading-tight mb-2 group-hover:text-mapul-green transition-colors">
-                                    <?= htmlspecialchars($menu->nama_menu) ?></h3>
+                                    <?= htmlspecialchars($menu->nama_menu) ?>
+                                </h3>
                             </div>
 
                             <div class="mt-4 flex justify-between items-end">
@@ -181,7 +183,7 @@
                             class="w-full border-2 border-yellow-400 rounded-lg p-2.5 focus:outline-none focus:border-mapul-green font-bold text-gray-700 bg-yellow-50">
                             <option value="">-- Pilih Cabang --</option>
                             <?php foreach ($cabang as $c): ?>
-                            <option value="<?= $c->id ?>"><?= htmlspecialchars($c->nama_cabang) ?></option>
+                                <option value="<?= $c->id ?>"><?= htmlspecialchars($c->nama_cabang) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -567,13 +569,13 @@
         const payload = {
             items: cart.map(item => ({
                 id_harga_paten: item.id,    // id dari harga_paten (bukan id_produk)
-                jumlah_beli:    item.qty,
-                diskon:         item.diskon
+                jumlah_beli: item.qty,
+                diskon: item.diskon
             })),
-            bayar:        bayar,
+            bayar: bayar,
             metode_bayar: method,
-            keterangan:   '',
-            id_cabang:    id_cabang
+            keterangan: '',
+            id_cabang: id_cabang
         };
 
 
