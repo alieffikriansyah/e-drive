@@ -41,11 +41,11 @@
     }
 </style>
 
-<div class="flex flex-col md:flex-row h-[calc(100vh-140px)] gap-4 overflow-hidden">
+<div class="flex flex-col md:flex-row h-[calc(100vh-140px)] gap-2 md:gap-4 overflow-hidden">
 
     <!-- LEFT SIDE: MENU PRODUK -->
     <div
-        class="w-full md:w-2/3 flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        class="w-full md:w-2/3 flex flex-col h-[40%] md:h-full md:flex-none bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <!-- Header Menu -->
         <div class="bg-gray-50 border-b border-gray-200 p-4 flex justify-between items-center z-10">
             <h2 class="text-xl font-extrabold text-mapul-green flex items-center gap-2">
@@ -105,13 +105,13 @@
 
     <!-- RIGHT SIDE: KERANJANG (CART) -->
     <div
-        class="w-full md:w-1/3 flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-        <div class="bg-mapul-green text-white p-4 flex justify-between items-center z-10 shadow-sm">
-            <h2 class="text-lg font-bold flex items-center gap-2">
+        class="w-full md:w-1/3 flex flex-col h-[60%] md:h-full md:flex-none bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+        <div class="bg-mapul-green text-white p-2 md:p-4 flex justify-between items-center z-10 shadow-sm">
+            <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                 <i class="fa fa-shopping-cart text-mapul-yellow"></i> Pesanan
             </h2>
             <button onclick="clearCart()"
-                class="text-white hover:text-red-300 transition-colors text-sm font-medium bg-mapul-green-md px-3 py-1 rounded">
+                class="text-white hover:text-red-300 transition-colors text-xs md:text-sm font-medium bg-mapul-green-md px-2 md:px-3 py-1 rounded">
                 <i class="fa fa-trash-alt mr-1"></i> Kosongkan
             </button>
         </div>
@@ -127,24 +127,24 @@
         </div>
 
         <!-- Cart Summary & Action -->
-        <div class="bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-gray-500 font-bold">Subtotal</span>
-                <span class="font-bold text-gray-700" id="cartSubtotal">Rp 0</span>
+        <div class="bg-white border-t border-gray-200 p-3 md:p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+            <div class="flex justify-between items-center mb-1 md:mb-2">
+                <span class="text-gray-500 font-bold text-sm md:text-base">Subtotal</span>
+                <span class="font-bold text-gray-700 text-sm md:text-base" id="cartSubtotal">Rp 0</span>
             </div>
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-100 border-dashed">
-                <span class="text-gray-500 font-bold">Total Diskon</span>
-                <span class="font-bold text-red-500" id="cartDiskon">- Rp 0</span>
+            <div class="flex justify-between items-center mb-2 md:mb-4 pb-2 md:pb-4 border-b border-gray-100 border-dashed">
+                <span class="text-gray-500 font-bold text-sm md:text-base">Total Diskon</span>
+                <span class="font-bold text-red-500 text-sm md:text-base" id="cartDiskon">- Rp 0</span>
             </div>
-            <div class="flex justify-between items-end mb-4">
-                <span class="text-gray-800 font-extrabold text-lg">TOTAL</span>
-                <span class="font-black text-3xl text-mapul-green-md" id="cartTotal">Rp 0</span>
+            <div class="flex justify-between items-end mb-2 md:mb-4">
+                <span class="text-gray-800 font-extrabold text-base md:text-lg">TOTAL</span>
+                <span class="font-black text-2xl md:text-3xl text-mapul-green-md" id="cartTotal">Rp 0</span>
             </div>
             <button onclick="openPaymentModal()" id="btnBayarUtama"
-                class="w-full bg-mapul-green hover:bg-mapul-green-md text-white font-bold py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                class="w-full bg-mapul-green hover:bg-mapul-green-md text-white font-bold py-2 md:py-3 rounded-lg md:rounded-xl shadow-lg transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 disabled>
-                <i class="fa fa-wallet text-mapul-yellow text-xl"></i>
-                <span class="text-lg tracking-wide uppercase">Bayar Sekarang</span>
+                <i class="fa fa-wallet text-mapul-yellow text-lg md:text-xl"></i>
+                <span class="text-base md:text-lg tracking-wide uppercase">Bayar Sekarang</span>
             </button>
         </div>
     </div>

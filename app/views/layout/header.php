@@ -159,10 +159,10 @@
 
         <!-- User Info + Logout -->
         <div class="flex items-center space-x-3 relative z-10">
-            <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-green-900 border border-green-700 shadow-inner">
-                <i class="fa fa-user-circle text-mapul-yellow"></i>
-                <span class="text-green-300 text-sm">Selamat datang,</span>
-                <span class="text-mapul-yellow font-semibold text-sm"><?= htmlspecialchars(Session::get('name') ?? '') ?></span>
+            <div class="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-green-900 border border-green-700 shadow-inner">
+                <i class="fa fa-user-circle text-mapul-yellow text-sm md:text-base"></i>
+                <span class="text-green-300 text-xs md:text-sm">Selamat datang,</span>
+                <span class="text-mapul-yellow font-semibold text-xs md:text-sm"><?= htmlspecialchars(Session::get('name') ?? '') ?></span>
             </div>
             <a href="<?= site_url('auth/logout') ?>"
                class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg shadow border border-red-600 hover:border-red-500 transition-all duration-200 flex items-center gap-2 font-semibold text-sm">

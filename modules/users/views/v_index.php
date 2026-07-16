@@ -1,7 +1,56 @@
 <?php $this->load->view('layout/header', ['title' => 'Manajemen User']); ?>
 
-<!-- Load SweetAlert2 -->
 <script src="<?= base_url('assets/js/sweetalert2.min.js') ?>"></script>
+
+<style>
+    @media (max-width: 768px) {
+        .res-table thead {
+            display: none;
+        }
+        .res-table, .res-table tbody, .res-table tr, .res-table td {
+            display: block;
+            width: 100%;
+        }
+        .res-table tr {
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .res-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem !important;
+            border-bottom: 1px solid #f3f4f6;
+            text-align: right !important;
+        }
+        .res-table td:last-child {
+            border-bottom: none;
+        }
+        .res-table td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #4b5563;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            text-align: left;
+            margin-right: 1rem;
+        }
+        /* Memastikan tombol aksi berbaris horizontal di mobile jika ada 2 tombol */
+        .res-table td[data-label="Aksi"] {
+            justify-content: space-between;
+        }
+        .res-table td[data-label="Aksi"] > div {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            width: 100%;
+        }
+    }
+</style>
 
 <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-l-4 border-mapul-yellow pl-4">
     <h1 class="text-3xl font-extrabold tracking-wide text-mapul-green uppercase">Manajemen User</h1>
@@ -70,7 +119,7 @@
 <!-- ================= TABEL DATA ================= -->
 <div class="mapul-card overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="res-table w-full text-left border-collapse">
             <thead class="mapul-thead">
                 <tr>
                     <th class="rounded-tl-lg">ID</th>
@@ -129,13 +178,15 @@
 
                             html += `
                                 <tr class="${trClass} transition-colors duration-150">
-                                    <td class="px-6 py-4 text-gray-500 font-semibold">${u.id}</td>
-                                    <td class="px-6 py-4 font-bold text-gray-800">${escapeHtml(u.name)}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-600">${escapeHtml(u.username)}</td>
-                                    <td class="px-6 py-4 text-mapul-green font-semibold">${u.nama_cabang ? escapeHtml(u.nama_cabang) : 'Pusat (Owner)'}</td>
-                                    <td class="px-6 py-4">${roleBadge}</td>
-                                    <td class="px-6 py-4 text-center">${badgeStr}</td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">${btnAct}</td>
+                                    <td data-label="ID" class="px-6 py-4 text-gray-500 font-semibold">${u.id}</td>
+                                    <td data-label="Nama Lengkap" class="px-6 py-4 font-bold text-gray-800">${escapeHtml(u.name)}</td>
+                                    <td data-label="Username" class="px-6 py-4 font-medium text-gray-600">${escapeHtml(u.username)}</td>
+                                    <td data-label="Cabang" class="px-6 py-4 text-mapul-green font-semibold">${u.nama_cabang ? escapeHtml(u.nama_cabang) : 'Pusat (Owner)'}</td>
+                                    <td data-label="Role" class="px-6 py-4">${roleBadge}</td>
+                                    <td data-label="Status" class="px-6 py-4 text-center">${badgeStr}</td>
+                                    <td data-label="Aksi" class="px-6 py-4 text-center whitespace-nowrap">
+                                        <div>${btnAct}</div>
+                                    </td>
                                 </tr>
                             `;
                         });
