@@ -3,8 +3,8 @@
 <div class="relative z-10 w-full max-w-md">
     <!-- Logo -->
     <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-edrive-accent to-blue-700 rounded-2xl shadow-xl shadow-edrive-accent/20 mb-4 float-anim">
-            <i class="fa-solid fa-hard-drive text-white text-2xl"></i>
+        <div class="inline-flex items-center justify-center w-16 h-16 mb-4 float-anim">
+            <img src="<?= site_url('assets/iass2.png') ?>" alt="Logo" class="w-full h-full object-contain">
         </div>
         <h1 class="text-2xl font-bold text-edrive-text tracking-tight">E-Drive</h1>
         <p class="text-sm text-edrive-muted mt-1">Enterprise Document Management System</p>

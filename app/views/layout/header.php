@@ -272,8 +272,8 @@
             <div class="flex items-center gap-8">
                 <!-- Logo -->
                 <a href="<?= site_url('dashboard') ?>" class="flex items-center gap-3 group">
-                    <div class="w-8 h-8 bg-gradient-to-br from-edrive-accent to-blue-700 rounded-lg flex items-center justify-center shadow-md">
-                        <i class="fa-solid fa-hard-drive text-white text-sm"></i>
+                    <div class="w-8 h-8 flex items-center justify-center">
+                        <img src="<?= site_url('assets/iass2.png') ?>" alt="Logo" class="w-full h-full object-contain">
                     </div>
                     <div id="navbar-brand">
                         <h1 class="text-lg font-bold text-edrive-text tracking-tight">E-Drive</h1>

@@ -89,7 +89,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- Left Col (Charts & Recent) -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="<?= $is_admin ? 'lg:col-span-2' : 'lg:col-span-3' ?> space-y-6">
             <!-- Chart Card -->
             <div class="glass-card p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -154,6 +154,7 @@
             </div>
         </div>
 
+        <?php if ($is_admin): ?>
         <!-- Right Col (Activity Log) -->
         <div class="lg:col-span-1">
             <div class="glass-card p-0 h-full flex flex-col">
@@ -196,7 +197,7 @@
                 </div>
             </div>
         </div>
-
+        <?php endif; ?>
     </div>
 </div>
 
