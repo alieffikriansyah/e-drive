@@ -44,7 +44,7 @@ class Loader {
         }
     }
 
-    public function model($model_name) {
+    public function model($model_name, $alias = null) {
         $module = '';
         $model_class = $model_name;
         
@@ -69,7 +69,10 @@ class Loader {
         if (file_exists($model_file)) {
             require_once $model_file;
             $CI =& Controller::get_instance();
-            $CI->$model_class = new $model_class_name();
+            
+            // Gunakan alias jika diberikan, jika tidak gunakan nama aslinya
+            $property_name = $alias ? $alias : strtolower($model_class);
+            $CI->$property_name = new $model_class_name();
         } else {
             die("Model does not exist: " . $model_name);
         }

@@ -12,7 +12,7 @@
 
 <div class="bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-300">
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="bg-richblack text-gray-200 uppercase text-xs tracking-wider">
                     <th class="px-6 py-4 font-semibold">ID</th>

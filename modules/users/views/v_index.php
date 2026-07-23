@@ -61,20 +61,9 @@
     <h3 class="text-xl font-bold text-mapul-green-md mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
         <i class="fa fa-user-plus text-mapul-yellow" id="formIcon"></i> <span id="formTitleText">Tambah User Baru</span>
     </h3>
-    <form id="userForm" onsubmit="submitForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+    <form id="userForm" onsubmit="submitForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
         <input type="hidden" name="id" id="userId" value="">
         
-        <!-- Cabang -->
-        <div class="lg:col-span-1 space-y-1">
-            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Cabang</label>
-            <select name="id_cabang" id="id_cabang" class="mapul-input appearance-none">
-                <option value="">Semua Cabang (Owner)</option>
-                <?php foreach ($cabang as $c): ?>
-                    <option value="<?= $c->id ?>"><?= htmlspecialchars($c->nama_cabang) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
         <!-- Role -->
         <div class="lg:col-span-1 space-y-1">
             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Role / Hak Akses</label>
@@ -125,7 +114,6 @@
                     <th class="rounded-tl-lg">ID</th>
                     <th>Nama Lengkap</th>
                     <th>Username</th>
-                    <th>Cabang</th>
                     <th>Role</th>
                     <th class="text-center">Status</th>
                     <th class="text-center rounded-tr-lg">Aksi</th>
@@ -181,7 +169,6 @@
                                     <td data-label="ID" class="px-6 py-4 text-gray-500 font-semibold">${u.id}</td>
                                     <td data-label="Nama Lengkap" class="px-6 py-4 font-bold text-gray-800">${escapeHtml(u.name)}</td>
                                     <td data-label="Username" class="px-6 py-4 font-medium text-gray-600">${escapeHtml(u.username)}</td>
-                                    <td data-label="Cabang" class="px-6 py-4 text-mapul-green font-semibold">${u.nama_cabang ? escapeHtml(u.nama_cabang) : 'Pusat (Owner)'}</td>
                                     <td data-label="Role" class="px-6 py-4">${roleBadge}</td>
                                     <td data-label="Status" class="px-6 py-4 text-center">${badgeStr}</td>
                                     <td data-label="Aksi" class="px-6 py-4 text-center whitespace-nowrap">
@@ -243,7 +230,6 @@
                 if (res.status) {
                     const u = res.data;
                     document.getElementById('userId').value = u.id;
-                    document.getElementById('id_cabang').value = u.id_cabang !== null ? u.id_cabang : '';
                     document.getElementById('role_id').value = u.role_id;
                     document.getElementById('name').value = u.name;
                     document.getElementById('username').value = u.username;

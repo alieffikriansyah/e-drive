@@ -1,331 +1,299 @@
-<?php $this->load->view('layout/header', ['title' => $title ?? 'Dashboard']); ?>
+<?php require_once APPPATH . 'views/layout/header.php'; ?>
 
-<?php
-$is_admin_dash = in_array(strtolower($_SESSION['role_name'] ?? ''), ['owner', 'admin']);
-?>
-<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-        <h1
-            class="text-3xl font-extrabold text-mapul-green-md drop-shadow-sm uppercase tracking-wider flex items-center gap-2">
-            <i class="fa fa-chart-line text-mapul-yellow"></i> Dashboard
-        </h1>
-        <p class="text-gray-500 font-medium mt-1">Ringkasan aktivitas dan performa warung hari ini.</p>
-    </div>
-    <div class="flex flex-col md:flex-row items-end gap-3">
-        <?php if ($is_admin_dash): ?>
-            <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Filter Cabang</label>
-                <select id="dash_filter_cabang" onchange="loadDashboardData()" class="mapul-input py-1.5">
-                    <option value="0">Semua Cabang</option>
-                    <?php foreach ($cabang as $cb): ?>
-                        <option value="<?= $cb->id ?>"><?= htmlspecialchars($cb->nama_cabang) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        <?php endif; ?>
-        <div class="mt-4 md:mt-0 text-right bg-white px-4 py-2 rounded-lg border border-mapul-silver shadow-sm">
-            <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">Tanggal Hari Ini</div>
-            <div class="text-mapul-green font-bold text-lg"><?= date('d F Y') ?></div>
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+<div class="space-y-6">
+    <!-- Welcome Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-edrive-text">Halo, <?= htmlspecialchars(Session::get('name')) ?> 👋</h1>
+            <p class="text-edrive-muted mt-1">Berikut adalah ringkasan aktivitas dan penyimpanan Anda hari ini.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="<?= site_url('drive') ?>" class="btn-primary">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Baru
+            </a>
         </div>
     </div>
-</div>
 
-<!-- Loading Overlay for Initial Fetch -->
-<div id="dashboard-loading" class="flex flex-col items-center justify-center py-20">
-    <i class="fa fa-circle-notch fa-spin text-4xl text-mapul-green mb-4"></i>
-    <p class="text-gray-500 font-bold">Memuat Data Dashboard...</p>
-</div>
-
-<!-- ================= SUMMARY CARDS ================= -->
-<div id="dashboard-content" class="hidden">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-        <!-- Omzet Hari Ini -->
-        <div
-            class="bg-gradient-to-br from-mapul-green via-mapul-green-md to-mapul-green rounded-xl shadow-lg border border-green-700 p-6 relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-            <div class="absolute top-0 right-0 -mr-4 -mt-4 opacity-10">
-                <i class="fa fa-wallet text-9xl text-white"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-green-100 font-semibold text-sm uppercase tracking-wider mb-2">Omzet Hari Ini</h3>
-                <div class="text-3xl font-bold text-white mb-1" id="dash_omzet_hari">Rp 0</div>
-                <div class="text-green-200 text-xs font-medium" id="dash_omzet_bulan">
-                    <i class="fa fa-calendar-alt mr-1"></i> Bulan ini: Rp 0
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Storage -->
+        <div class="stat-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-edrive-muted mb-1">Total Penyimpanan</p>
+                    <h3 class="text-2xl font-bold text-edrive-text"><?= format_file_size($total_size) ?></h3>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+                    <i class="fa-solid fa-database text-xl"></i>
                 </div>
             </div>
         </div>
-        <!-- Operasional Hari Ini -->
-        <div
-            class="bg-gradient-to-br from-red-50 to-white rounded-xl shadow-lg border-l-4 border-l-red-500 border border-red-100 p-6 relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-            <div class="absolute top-0 right-0 -mr-4 -mt-4 opacity-5">
-                <i class="fa fa-file-invoice-dollar text-9xl text-black"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-red-500 font-semibold text-sm uppercase tracking-wider mb-2">Operasional Hari Ini</h3>
-                <div class="text-3xl font-bold mb-1 text-gray-800" id="dash_ops_hari">Rp 0</div>
-                <div class="text-gray-400 text-xs font-medium">
-                    <i class="fa fa-info-circle mr-1"></i> (Pengeluaran Harian)
-                </div>
-            </div>
-        </div>
-        <!-- Laba Bersih Hari Ini -->
-        <div
-            class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border-l-4 border-l-mapul-yellow border border-gray-200 p-6 relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-            <div class="absolute top-0 right-0 -mr-4 -mt-4 opacity-5">
-                <i class="fa fa-coins text-9xl text-black"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wider mb-2">Laba Bersih Hari Ini</h3>
-                <div class="text-3xl font-bold mb-1 text-gray-800" id="dash_laba_hari">Rp 0</div>
-                <div class="text-gray-400 text-xs font-medium">
-                    <i class="fa fa-info-circle mr-1"></i> (Omzet - Operasional)
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Transaksi -->
-        <div
-            class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border-l-4 border-l-blue-500 border border-gray-200 p-6 relative overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
-            <div class="absolute top-0 right-0 -mr-4 -mt-4 opacity-5">
-                <i class="fa fa-shopping-cart text-9xl text-black"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-gray-500 font-semibold text-sm uppercase tracking-wider mb-2">Total Transaksi (Hari Ini)
-                </h3>
-                <div class="text-3xl font-bold text-richblack mb-1" id="dash_total_transaksi">0</div>
-                <div class="text-gray-400 text-xs font-medium">
-                    <i class="fa fa-receipt mr-1"></i> Nota Berhasil
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ================= 1 COLUMN LAYOUT ================= -->
-    <div class="grid grid-cols-1 gap-8 mb-6">
         
-        <!-- GRAFIK PRODUK TERLARIS (HANYA ADMIN) -->
-        <?php if ($is_admin_dash): ?>
-        <div class="mapul-card flex flex-col">
-            <div class="mapul-modal-header bg-white border-b-2 border-gray-100 flex-shrink-0">
-                <h3 class="font-bold text-mapul-green uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa fa-chart-bar text-mapul-yellow"></i> Produk Terlaris
-                </h3>
-                <select id="dash_filter_periode" onchange="loadChartTerlaris()" class="mapul-input py-1.5 text-xs">
-                    <option value="hari_ini">Hari Ini</option>
-                    <option value="minggu_ini">Minggu Ini</option>
-                    <option value="bulan_ini">Bulan Ini</option>
-                    <option value="3_bulan">3 Bulan Terakhir</option>
-                    <option value="6_bulan">6 Bulan Terakhir</option>
-                    <option value="tahun_ini">Tahun Ini</option>
-                </select>
+        <!-- Documents -->
+        <div class="stat-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-edrive-muted mb-1">Total Dokumen</p>
+                    <h3 class="text-2xl font-bold text-edrive-text"><?= number_format($total_docs) ?></h3>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-100">
+                    <i class="fa-solid fa-file-lines text-xl"></i>
+                </div>
             </div>
-            <div class="p-4 flex-1 relative min-h-[300px]">
-                <canvas id="chartProdukTerlaris"></canvas>
+        </div>
+
+        <!-- Drives -->
+        <div class="stat-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-edrive-muted mb-1">Drive Diakses</p>
+                    <h3 class="text-2xl font-bold text-edrive-text"><?= number_format($total_drives) ?></h3>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 shadow-sm border border-purple-100">
+                    <i class="fa-solid fa-hard-drive text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users (Admin only) -->
+        <?php if ($is_admin): ?>
+        <div class="stat-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-edrive-muted mb-1">Total Pengguna</p>
+                    <h3 class="text-2xl font-bold text-edrive-text"><?= number_format($total_users) ?></h3>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
+                    <i class="fa-solid fa-users text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="stat-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-sm font-medium text-edrive-muted mb-1">Role Anda</p>
+                    <h3 class="text-lg font-bold text-edrive-text leading-tight mt-1"><?= htmlspecialchars(Session::get('role_name')) ?></h3>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-600 shadow-sm border border-gray-200">
+                    <i class="fa-solid fa-id-badge text-xl"></i>
+                </div>
             </div>
         </div>
         <?php endif; ?>
-
-        <!-- TRANSAKSI TERAKHIR -->
-        <div class="mapul-card">
-            <div class="mapul-modal-header bg-white border-b-2 border-gray-100">
-                <h3 class="font-bold text-mapul-green uppercase tracking-wider flex items-center gap-2">
-                    <i class="fa fa-history text-mapul-yellow"></i> Transaksi Terakhir
-                </h3>
-                <a href="<?= site_url('list_penjualan') ?>"
-                    class="text-xs font-bold text-gray-500 hover:text-mapul-green transition-colors"><?php if ($is_admin_dash): ?>Lihat
-                        Semua <i class="fa fa-arrow-right"></i><?php else: ?><span
-                            class="text-transparent">-</span><?php endif; ?></a>
-            </div>
-            <div class="p-0 overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wider border-b border-gray-200">
-                            <th class="px-4 py-3">Nota</th>
-                            <th class="px-4 py-3">Waktu</th>
-                            <th class="px-4 py-3">Cabang</th>
-                            <th class="px-4 py-3 text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100" id="dash_table_transaksi">
-                        <!-- Injected by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    let chartProdukTerlaris = null;
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Col (Charts & Recent) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Chart Card -->
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-edrive-text">Penyimpanan per Drive</h3>
+                    <button class="btn-icon"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+                <div id="storageChart" class="w-full h-[300px]"></div>
+            </div>
 
-    document.addEventListener('DOMContentLoaded', function () {
-        loadDashboardData();
-    });
-
-    function formatNumber(num) {
-        return parseFloat(num).toLocaleString('id-ID');
-    }
-
-    function escapeHtml(unsafe) {
-        if (!unsafe) return '';
-        return unsafe.toString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    function loadDashboardData() {
-        const cabangEl = document.getElementById('dash_filter_cabang');
-        const id_cabang = cabangEl ? cabangEl.value : 0;
-        fetch('<?= base_url('dashboard/get_data') ?>?id_cabang=' + id_cabang)
-            .then(response => response.json())
-            .then(res => {
-                if (res.status) {
-                    const data = res.data;
-
-                    // Hide loading, show content
-                    document.getElementById('dashboard-loading').classList.add('hidden');
-                    document.getElementById('dashboard-content').classList.remove('hidden');
-
-                    // Update Cards
-                    document.getElementById('dash_omzet_hari').innerText = `Rp ${formatNumber(data.omzet_hari)}`;
-                    document.getElementById('dash_omzet_bulan').innerHTML = `<i class="fa fa-calendar-alt mr-1"></i> Bulan ini: Rp ${formatNumber(data.omzet_bulan)}`;
-                    document.getElementById('dash_ops_hari').innerText = `Rp ${formatNumber(data.operasional_hari)}`;
-
-                    const labaEl = document.getElementById('dash_laba_hari');
-                    labaEl.innerText = `Rp ${formatNumber(data.laba_bersih_hari)}`;
-                    if (data.laba_bersih_hari >= 0) {
-                        labaEl.classList.add('text-mapul-green-md');
-                        labaEl.classList.remove('text-red-600', 'text-gray-800');
-                    } else {
-                        labaEl.classList.add('text-red-600');
-                        labaEl.classList.remove('text-mapul-green-md', 'text-gray-800');
-                    }
-
-                    document.getElementById('dash_total_transaksi').innerText = formatNumber(data.total_transaksi);
-
-                    // Update Transaksi Terakhir Table
-                    const tTx = document.getElementById('dash_table_transaksi');
-                    if (!data.transaksi_terakhir || data.transaksi_terakhir.length === 0) {
-                        tTx.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-gray-400 font-medium">Belum ada transaksi hari ini</td></tr>`;
-                    } else {
-                        let htmlTx = '';
-                        data.transaksi_terakhir.forEach(t => {
-                            const date = new Date(t.tanggal_transaksi);
-                            const timeStr = String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
-                            htmlTx += `
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 font-semibold text-mapul-green-md">${escapeHtml(t.no_nota)}</td>
-                                <td class="px-4 py-3 text-gray-500 text-xs">${timeStr}</td>
-                                <td class="px-4 py-3 text-gray-600">${escapeHtml(t.nama_cabang)}</td>
-                                <td class="px-4 py-3 text-right font-bold">Rp ${formatNumber(t.total_bayar)}</td>
+            <!-- Recent Documents -->
+            <div class="glass-card overflow-hidden">
+                <div class="p-5 border-b border-edrive-border flex items-center justify-between bg-white">
+                    <h3 class="text-lg font-bold text-edrive-text">Dokumen Terbaru</h3>
+                    <a href="<?= site_url('recent') ?>" class="text-sm text-edrive-accent hover:underline font-medium">Lihat Semua</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table-light">
+                        <thead>
+                            <tr>
+                                <th>Nama File</th>
+                                <th>Lokasi</th>
+                                <th>Ukuran</th>
+                                <th>Diunggah</th>
                             </tr>
-                        `;
-                        });
-                        tTx.innerHTML = htmlTx;
-                    }
+                        </thead>
+                        <tbody>
+                            <?php if(empty($recent_docs)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-edrive-muted">Belum ada dokumen yang diunggah</td>
+                            </tr>
+                            <?php else: ?>
+                                <?php foreach($recent_docs as $doc): ?>
+                                <tr>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <i class="<?= get_file_icon($doc->file_type) ?> text-xl w-6 text-center"></i>
+                                            <div>
+                                                <p class="font-medium text-edrive-text line-clamp-1" title="<?= htmlspecialchars($doc->name) ?>">
+                                                    <?= htmlspecialchars($doc->name) ?>
+                                                </p>
+                                                <p class="text-xs text-edrive-muted"><?= htmlspecialchars($doc->uploader_name) ?></p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info bg-blue-50 text-blue-600 border border-blue-100">
+                                            <i class="fa-solid fa-hard-drive mr-1"></i> <?= htmlspecialchars($doc->drive_name) ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-edrive-muted"><?= format_file_size($doc->file_size) ?></td>
+                                    <td class="text-edrive-muted">
+                                        <div class="tooltip" data-tip="<?= formatDate($doc->created_at) ?>">
+                                            <?= timeAgo($doc->created_at) ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-                    // Call chart loader after dashboard data resolves
-                    loadChartTerlaris();
+        <!-- Right Col (Activity Log) -->
+        <div class="lg:col-span-1">
+            <div class="glass-card p-0 h-full flex flex-col">
+                <div class="p-5 border-b border-edrive-border flex items-center justify-between bg-white rounded-t-2xl">
+                    <h3 class="text-lg font-bold text-edrive-text">Aktivitas Terkini</h3>
+                    <a href="<?= site_url('activity_log') ?>" class="text-sm text-edrive-accent hover:underline font-medium">Log</a>
+                </div>
+                <div class="p-5 flex-1 bg-gray-50/30 rounded-b-2xl">
+                    <?php if(empty($activities)): ?>
+                        <div class="text-center py-8 text-edrive-muted">Belum ada aktivitas tercatat</div>
+                    <?php else: ?>
+                        <div class="relative border-l border-edrive-border ml-3 space-y-6 pb-4">
+                            <?php foreach($activities as $act): ?>
+                            <?php 
+                                $icon = 'fa-circle text-gray-400';
+                                $bg = 'bg-white';
+                                $border = 'border-gray-200';
+                                if($act->action == 'UPLOAD' || $act->action == 'CREATE') { $icon = 'fa-arrow-up text-emerald-500'; $bg = 'bg-emerald-50'; $border = 'border-emerald-200'; }
+                                elseif($act->action == 'DOWNLOAD') { $icon = 'fa-arrow-down text-blue-500'; $bg = 'bg-blue-50'; $border = 'border-blue-200'; }
+                                elseif($act->action == 'DELETE') { $icon = 'fa-trash text-red-500'; $bg = 'bg-red-50'; $border = 'border-red-200'; }
+                                elseif($act->action == 'LOGIN') { $icon = 'fa-right-to-bracket text-purple-500'; $bg = 'bg-purple-50'; $border = 'border-purple-200'; }
+                            ?>
+                            <div class="relative pl-6">
+                                <span class="absolute -left-[17px] top-1 w-8 h-8 rounded-full border shadow-sm flex items-center justify-center <?= $bg ?> <?= $border ?>">
+                                    <i class="fa-solid <?= $icon ?> text-xs"></i>
+                                </span>
+                                <div class="bg-white border border-edrive-border p-3 rounded-xl shadow-sm">
+                                    <p class="text-sm text-edrive-text">
+                                        <span class="font-semibold"><?= htmlspecialchars($act->user_name) ?></span>
+                                        <?= htmlspecialchars($act->description) ?>
+                                    </p>
+                                    <p class="text-xs text-edrive-muted mt-1.5 flex items-center gap-1">
+                                        <i class="fa-regular fa-clock"></i> <?= timeAgo($act->created_at) ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
-                    // Stok menipis dinonaktifkan
-                } else {
-                    console.error("Dashboard error:", res.message);
-                    document.getElementById('dashboard-loading').innerHTML = `<i class="fa fa-times text-red-500 text-4xl mb-4"></i><p class="text-red-500">Gagal memuat data.</p>`;
-                }
-            })
-            .catch(err => {
-                console.error("Fetch error:", err);
-                document.getElementById('dashboard-loading').innerHTML = `<i class="fa fa-times text-red-500 text-4xl mb-4"></i><p class="text-red-500">Gagal terhubung ke server.</p>`;
-            });
-    }
+    </div>
+</div>
 
-    function loadChartTerlaris() {
-        const periodeEl = document.getElementById('dash_filter_periode');
-        if (!periodeEl) return; // Prevent error for non-admins (chart hidden)
-
-        const cabangEl  = document.getElementById('dash_filter_cabang');
-        const id_cabang = cabangEl ? cabangEl.value : 0;
-        const periode   = periodeEl.value;
-
-        fetch(`<?= base_url('dashboard/get_chart_terlaris') ?>?id_cabang=${id_cabang}&periode=${periode}`)
-            .then(response => response.json())
-            .then(res => {
-                if (res.status) {
-                    renderChartTerlaris(res.labels, res.data);
-                }
-            });
-    }
-
-    function renderChartTerlaris(labels, data) {
-        const canvas = document.getElementById('chartProdukTerlaris');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare Data for ECharts
+    const chartDataRaw = <?= json_encode($chart_data) ?>;
+    
+    if (chartDataRaw.length > 0 && document.getElementById('storageChart')) {
+        const chartDom = document.getElementById('storageChart');
+        const myChart = echarts.init(chartDom);
         
-        if (chartProdukTerlaris) {
-            chartProdukTerlaris.destroy();
-        }
-
-        // Alternating colors like ECharts (Blue & Green)
-        const colors = labels.map((_, i) => i % 2 === 0 ? '#5470C6' : '#91CC75');
-
-        chartProdukTerlaris = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Terjual',
-                    data: data,
-                    backgroundColor: colors,
-                    borderRadius: 4,
-                    barPercentage: 0.6,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: { precision: 0, color: '#6B7280' },
-                        grid: {
-                            display: true,
-                            color: '#F3F4F6',
-                            drawBorder: false,
-                        }
-                    },
-                    y: {
-                        ticks: { color: '#4B5563', font: { weight: 'bold' } },
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1F2937',
-                        padding: 10,
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 14, weight: 'bold' },
-                        displayColors: false,
-                        cornerRadius: 6,
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
-                }
-            }
+        let categories = [];
+        let dataSeries = [];
+        
+        chartDataRaw.forEach(item => {
+            categories.push(item.name);
+            // Convert to MB for chart display
+            let mb = (item.total_size / (1024 * 1024)).toFixed(2);
+            dataSeries.push({
+                value: mb,
+                name: item.name,
+                itemStyle: { borderRadius: [4, 4, 0, 0] }
+            });
         });
+
+        const option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function (params) {
+                    let val = params[0];
+                    return `<div class="font-sans">
+                                <strong>${val.name}</strong><br/>
+                                <span class="text-xs text-gray-500">Penyimpanan: </span>
+                                <span class="font-bold">${val.value} MB</span>
+                            </div>`;
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: categories,
+                    axisTick: { alignWithLabel: true },
+                    axisLine: { lineStyle: { color: '#E2E8F0' } },
+                    axisLabel: { color: '#64748B', fontFamily: 'Inter', fontSize: 11, width: 80, overflow: 'truncate' }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'Ukuran (MB)',
+                    nameTextStyle: { color: '#94A3B8', fontSize: 11, padding: [0, 0, 0, 20] },
+                    splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } },
+                    axisLabel: { color: '#64748B', fontFamily: 'Inter', fontSize: 11 }
+                }
+            ],
+            series: [
+                {
+                    name: 'Storage',
+                    type: 'bar',
+                    barWidth: '40%',
+                    data: dataSeries,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#3B82F6' },
+                            { offset: 1, color: '#1D4ED8' }
+                        ])
+                    }
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+        
+        // Responsive chart
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+        
+        // Hook into sidebar toggle to resize chart
+        const originalToggle = window.toggleSidebar;
+        window.toggleSidebar = function() {
+            if(originalToggle) originalToggle();
+            setTimeout(() => { myChart.resize(); }, 350);
+        };
+    } else {
+        document.getElementById('storageChart').innerHTML = '<div class="h-full flex items-center justify-center text-edrive-muted">Data penyimpanan belum tersedia</div>';
     }
+});
 </script>
 
-<?php $this->load->view('layout/footer'); ?>
+<?php require_once APPPATH . 'views/layout/footer.php'; ?>

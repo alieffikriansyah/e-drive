@@ -26,15 +26,18 @@ class Database {
         'role_menu_access',
     ];
 
-    const STATUS_ACTIVE  = 0;
+    // Tabel yang TIDAK pakai timestamp fields
+    private $tables_without_timestamps = [
+        'role_menu_access',
+    ];
+
+    const STATUS_DRAFT   = 0;
+    const STATUS_ACTIVE  = 1;
     const STATUS_DELETED = 8;
     
     private $stmt = null;
 
     private function __construct() {
-        // Baca konfigurasi DB langsung dari file .env untuk menghindari konflik
-        // dengan system/Apache environment variable yang mungkin bernilai kosong
-        // dan mencegah Env::get() membaca nilai yang benar dari .env
         $dbConfig = $this->_readEnvFile();
 
         $host    = $dbConfig['DB_HOST'] ?? 'localhost';
@@ -56,17 +59,12 @@ class Database {
 
         try {
             $this->pdo = new PDO($dsn, $user, $pass, $options);
-            // Pastikan database terpilih secara eksplisit
             $this->pdo->exec("USE `$db`");
         } catch (\PDOException $e) {
             throw new \PDOException($e->getMessage(), (int)$e->getCode());
         }
     }
 
-    /**
-     * Membaca file .env secara langsung untuk menghindari konflik
-     * dengan system environment variable Apache/OS.
-     */
     private function _readEnvFile(): array {
         $path = defined('ROOTPATH') ? ROOTPATH . '.env' : __DIR__ . '/../../.env';
         $config = [];
@@ -95,6 +93,10 @@ class Database {
         return self::$instance;
     }
 
+    public function getPdo() {
+        return $this->pdo;
+    }
+
     private function _reset_builder() {
         $this->selects = ['*'];
         $this->from = '';
@@ -108,13 +110,18 @@ class Database {
         $this->offset = null;
         $this->params = [];
         $this->skip_status_filter = false;
-        // Do not clear $this->stmt here, as it is needed to fetch results after get() executes.
     }
 
     private function has_status_column($table) {
         $parts = explode(' ', trim($table));
         $real_table = $parts[0];
         return !in_array($real_table, $this->tables_without_status);
+    }
+
+    private function has_timestamps($table) {
+        $parts = explode(' ', trim($table));
+        $real_table = $parts[0];
+        return !in_array($real_table, $this->tables_without_timestamps);
     }
 
     public function query($sql, $params = []) {
@@ -292,6 +299,12 @@ class Database {
         return $this;
     }
     
+    public function or_group_start() {
+        $this->wheres[] = ['OR', '('];
+        $this->group_started = true;
+        return $this;
+    }
+    
     public function group_end() {
         $this->wheres[] = ['', ')'];
         $this->group_started = false;
@@ -409,17 +422,26 @@ class Database {
     }
     
     public function insert($table = '', $data = []) {
-        // Support CI signature $this->db->insert('table', $data)
         if (is_array($table)) {
-            // Native format insert($data)
             $data = $table;
             $table = $this->from;
         } elseif ($table !== '') {
             $this->from($table);
         }
         
+        // Auto-inject status
         if ($this->has_status_column($table) && !isset($data['status'])) {
             $data['status'] = self::STATUS_ACTIVE;
+        }
+
+        // Auto-inject timestamps
+        if ($this->has_timestamps($table)) {
+            if (!isset($data['created_at'])) {
+                $data['created_at'] = date('Y-m-d H:i:s');
+            }
+            if (!isset($data['created_by'])) {
+                $data['created_by'] = $this->_current_user_id();
+            }
         }
 
         $fields = array_keys($data);
@@ -431,7 +453,7 @@ class Database {
         $id = $this->pdo->lastInsertId();
         
         // Auto Log
-        $this->_auto_log('TAMBAH_DATA', $table, 'User menambah data ke tabel ' . $table . '. ID: ' . $id . '. Data: ' . json_encode($data));
+        $this->_auto_log('CREATE', $table, 'Menambah data ke tabel ' . $table . '. ID: ' . $id);
         
         $this->_reset_builder();
         return $id;
@@ -439,7 +461,6 @@ class Database {
 
     public function update($table = '', $data = null, $where = null) {
         if (is_array($table)) {
-            // native format: update($data)
             $data = $table;
             $table = $this->from;
         } elseif ($table !== '') {
@@ -448,6 +469,16 @@ class Database {
         
         if ($where !== null) $this->where($where);
         
+        // Auto-inject timestamps
+        if ($this->has_timestamps($table)) {
+            if (!isset($data['updated_at'])) {
+                $data['updated_at'] = date('Y-m-d H:i:s');
+            }
+            if (!isset($data['updated_by'])) {
+                $data['updated_by'] = $this->_current_user_id();
+            }
+        }
+
         $fields = [];
         $values = [];
         foreach ($data as $key => $value) {
@@ -474,7 +505,7 @@ class Database {
         $rowCount = $this->stmt->rowCount();
         
         // Auto Log
-        $this->_auto_log('UBAH_DATA', $table, 'User mengubah data di tabel ' . $table . '. Kriteria: ' . json_encode($this->wheres) . '. Data baru: ' . json_encode($data));
+        $this->_auto_log('UPDATE', $table, 'Mengubah data di tabel ' . $table);
         
         $this->_reset_builder();
         return $rowCount;
@@ -498,7 +529,16 @@ class Database {
         }
 
         if ($this->has_status_column($table)) {
-            $sql = "UPDATE " . $table . " SET status = " . self::STATUS_DELETED . $where_sql;
+            // Soft delete: set status=8, deleted_at, updated_by
+            $set_parts = "status = " . self::STATUS_DELETED;
+            if ($this->has_timestamps($table)) {
+                $set_parts .= ", deleted_at = '" . date('Y-m-d H:i:s') . "'";
+                $uid = $this->_current_user_id();
+                if ($uid) {
+                    $set_parts .= ", updated_by = " . (int)$uid;
+                }
+            }
+            $sql = "UPDATE " . $table . " SET " . $set_parts . $where_sql;
         } else {
             $sql = "DELETE FROM " . $table . $where_sql;
         }
@@ -507,7 +547,7 @@ class Database {
         $rowCount = $this->stmt->rowCount();
         
         // Auto Log
-        $this->_auto_log('HAPUS_DATA', $table, 'User menghapus data di tabel ' . $table . '. Kriteria: ' . json_encode($this->wheres));
+        $this->_auto_log('DELETE', $table, 'Menghapus data di tabel ' . $table);
         
         $this->_reset_builder();
         return $rowCount;
@@ -536,8 +576,21 @@ class Database {
             }
         }
         
-        $sql = "UPDATE " . $table . " SET status = " . self::STATUS_ACTIVE . $where_sql;
+        $set_parts = "status = " . self::STATUS_ACTIVE . ", deleted_at = NULL";
+        if ($this->has_timestamps($table)) {
+            $set_parts .= ", updated_at = '" . date('Y-m-d H:i:s') . "'";
+            $uid = $this->_current_user_id();
+            if ($uid) {
+                $set_parts .= ", updated_by = " . (int)$uid;
+            }
+        }
+        
+        $sql = "UPDATE " . $table . " SET " . $set_parts . $where_sql;
         $this->query($sql, $this->params);
+        
+        // Auto Log
+        $this->_auto_log('RESTORE', $table, 'Memulihkan data di tabel ' . $table);
+        
         $this->_reset_builder();
         return $this->stmt->rowCount();
     }
@@ -547,24 +600,30 @@ class Database {
         return $this;
     }
 
+    private function _current_user_id() {
+        if (session_status() === PHP_SESSION_NONE) return null;
+        return $_SESSION['user_id'] ?? null;
+    }
+
     private function _auto_log($action, $table, $keterangan) {
-        // Prevent infinite loop if logging into log_record_users itself
-        if ($table === 'log_record_users') return;
+        // Prevent infinite loop
+        if (in_array($table, ['activity_logs', 'log_record_users'])) return;
         
-        // Cek session
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
         $user_id = $_SESSION['user_id'] ?? null;
-        if (!$user_id) return; // Do not log if it's not a user action (e.g., system background tasks)
+        if (!$user_id) return;
 
         $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         
-        $sql = "INSERT INTO log_record_users (id_user, action, keterangan, ip_address, created_at) VALUES (?, ?, ?, ?, NOW())";
+        $sql = "INSERT INTO activity_logs (user_id, action, entity_type, description, ip_address, user_agent, created_at, status) 
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)";
         try {
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([$user_id, $action, $keterangan, $ip_address]);
+            $stmt->execute([$user_id, $action, $table, $keterangan, $ip_address, $user_agent]);
         } catch (\Throwable $e) {
             // Abaikan error pada logging agar transaksi utama tidak gagal
         }

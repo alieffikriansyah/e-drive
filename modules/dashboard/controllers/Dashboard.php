@@ -1,185 +1,101 @@
 <?php
 
-require_once APPPATH . 'middleware/AuthMiddleware.php';
-
-class Dashboard extends Controller
-{
-    public function __construct()
-    {
+class Dashboard extends Controller {
+    public function __construct() {
         parent::__construct();
-        $this->load->helper('url');
-    }
-
-    public function _middleware()
-    {
+        require_once APPPATH . 'middleware/AuthMiddleware.php';
         AuthMiddleware::check();
+        $this->load->helper('url');
+        $this->load->helper('file');
     }
 
-    public function index()
-    {
-        $user_role = strtolower($_SESSION['role_name'] ?? '');
-        $user_cabang = $_SESSION['id_cabang'] ?? 0;
+    public function index() {
+        $user_id = Session::get('user_id');
+        $role_id = Session::get('role_id');
+        $is_admin = AuthMiddleware::isManager();
 
-        if (in_array($user_role, ['owner', 'admin'])) {
-            $cabang = $this->db->query("SELECT id, nama_cabang FROM cabang WHERE status != 8 ORDER BY nama_cabang ASC")->result();
+        // 1. Storage Stats
+        if ($is_admin) {
+            $total_docs = $this->db->query("SELECT COUNT(*) as cnt FROM documents WHERE status = 1")->row()->cnt;
+            $total_size = $this->db->query("SELECT SUM(file_size) as total FROM documents WHERE status = 1")->row()->total ?? 0;
+            $total_drives = $this->db->query("SELECT COUNT(*) as cnt FROM drives WHERE status = 1")->row()->cnt;
+            $total_users = $this->db->query("SELECT COUNT(*) as cnt FROM users WHERE status = 1")->row()->cnt;
         } else {
-            $cabang = $this->db->query("SELECT id, nama_cabang FROM cabang WHERE id = ? AND status != 8", [$user_cabang])->result();
-        }
-
-        $data = [
-            'title' => 'Dashboard',
-            'cabang' => $cabang,
-        ];
-        $this->load->view('dashboard/v_index', $data);
-    }
-
-    public function get_data()
-    {
-        $id_cabang_session = $_SESSION['id_cabang'] ?? 0;
-        $role = strtolower($_SESSION['role_name'] ?? '');
-        $is_admin = in_array($role, ['owner', 'admin']);
-        $today = date('Y-m-d');
-        $bulan = date('Y-m');
-
-        // Filter cabang: admin bisa pilih via GET, selain admin pakai cabang session
-        $id_cabang = $is_admin
-            ? (int) ($_GET['id_cabang'] ?? 0)
-            : (int) $id_cabang_session;
-
-        // Omzet & transaksi hari ini
-        $where_penjualan = ($id_cabang > 0) ? "AND id_cabang = $id_cabang" : '';
-        $hari = $this->db->query("
-            SELECT
-                COUNT(id)         AS total_transaksi,
-                COALESCE(SUM(total_bayar), 0) AS omzet,
-                COALESCE(SUM(total_bayar), 0) AS laba_kotor
-            FROM penjualan
-            WHERE status != 8
-              AND DATE(tanggal_transaksi) = ?
-              $where_penjualan
-        ", [$today])->fetch(PDO::FETCH_ASSOC);
-
-        // Pengeluaran operasional hari ini
-        $where_ops = ($id_cabang > 0) ? "AND id_cabang = $id_cabang" : '';
-        $ops_hari = $this->db->query("
-            SELECT COALESCE(SUM(total_biaya), 0) AS total_ops
-            FROM pengeluaran_operasional
-            WHERE status != 8 AND tanggal = ?
-              $where_ops
-        ", [$today])->fetch(PDO::FETCH_ASSOC);
-
-        $laba_bersih_hari = ($hari['laba_kotor'] ?? 0) - ($ops_hari['total_ops'] ?? 0);
-
-        // Omzet bulan ini
-        $bulan_data = $this->db->query("
-            SELECT COALESCE(SUM(total_bayar), 0) AS omzet_bulan
-            FROM penjualan
-            WHERE status != 8
-              AND DATE_FORMAT(tanggal_transaksi, '%Y-%m') = ?
-              $where_penjualan
-        ", [$bulan])->fetch(PDO::FETCH_ASSOC);
-
-        // Produk stok menipis dinonaktifkan (kasir-saja)
-        $stok_menipis = ['jumlah' => 0];
-        $produk_menipis = [];
-
-        // Transaksi terakhir (limit 5)
-        $where_pj_alias = ($id_cabang > 0) ? "AND pj.id_cabang = $id_cabang" : '';
-        $transaksi_terakhir = $this->db->query("
-            SELECT pj.no_nota, pj.total_bayar, pj.tanggal_transaksi,
-                   pj.metode_bayar, u.name AS kasir, c.nama_cabang
-            FROM penjualan pj
-            LEFT JOIN users  u ON pj.id_user   = u.id
-            LEFT JOIN cabang c ON pj.id_cabang = c.id
-            WHERE pj.status != 8
-              $where_pj_alias
-            ORDER BY pj.tanggal_transaksi DESC
-            LIMIT 5
-        ")->result();
-
-        $data = [
-            'omzet_hari' => $hari['omzet'] ?? 0,
-            'total_transaksi' => $hari['total_transaksi'] ?? 0,
-            'laba_bersih_hari' => $laba_bersih_hari,
-            'operasional_hari' => $ops_hari['total_ops'] ?? 0,
-            'omzet_bulan' => $bulan_data['omzet_bulan'] ?? 0,
-            'stok_menipis' => $stok_menipis['jumlah'] ?? 0,
-            'produk_menipis' => $produk_menipis,
-            'transaksi_terakhir' => $transaksi_terakhir,
-        ];
-
-        header('Content-Type: application/json');
-        echo json_encode(['status' => true, 'data' => $data]);
-        exit;
-    }
-
-    public function get_chart_terlaris()
-    {
-        $id_cabang_session = $_SESSION['id_cabang'] ?? 0;
-        $role              = strtolower($_SESSION['role_name'] ?? '');
-        $is_admin          = in_array($role, ['owner', 'admin']);
-        
-        $id_cabang = $is_admin
-            ? (int)($_GET['id_cabang'] ?? 0)
-            : (int)$id_cabang_session;
+            // Stats based on accessible drives
+            $drives = $this->db->query("
+                SELECT id FROM drives 
+                WHERE (owner_role_id = ? OR is_shared = 1) AND status = 1
+                UNION
+                SELECT entity_id as id FROM shared_access 
+                WHERE entity_type = 'drive' AND user_id = ? AND status = 1
+            ", [$role_id, $user_id])->fetchAll();
             
-        $periode = $_GET['periode'] ?? 'hari_ini';
-        
-        $today = date('Y-m-d');
-        if ($periode === 'hari_ini') {
-            $tgl_awal = $today;
-            $tgl_akhir = $today;
-        } elseif ($periode === 'minggu_ini') {
-            $tgl_awal = date('Y-m-d', strtotime('monday this week'));
-            $tgl_akhir = date('Y-m-d', strtotime('sunday this week'));
-        } elseif ($periode === 'bulan_ini') {
-            $tgl_awal = date('Y-m-01');
-            $tgl_akhir = date('Y-m-t');
-        } elseif ($periode === '3_bulan') {
-            $tgl_awal = date('Y-m-d', strtotime('-3 months'));
-            $tgl_akhir = $today;
-        } elseif ($periode === '6_bulan') {
-            $tgl_awal = date('Y-m-d', strtotime('-6 months'));
-            $tgl_akhir = $today;
-        } elseif ($periode === 'tahun_ini') {
-            $tgl_awal = date('Y-01-01');
-            $tgl_akhir = date('Y-12-31');
-        } else {
-            $tgl_awal = $today;
-            $tgl_akhir = $today;
+            $drive_ids = array_column($drives, 'id');
+            if (empty($drive_ids)) {
+                $total_docs = 0; $total_size = 0; $total_drives = 0;
+            } else {
+                $in_drives = implode(',', $drive_ids);
+                $total_docs = $this->db->query("SELECT COUNT(*) as cnt FROM documents WHERE drive_id IN ($in_drives) AND status = 1")->row()->cnt;
+                $total_size = $this->db->query("SELECT SUM(file_size) as total FROM documents WHERE drive_id IN ($in_drives) AND status = 1")->row()->total ?? 0;
+                $total_drives = count($drive_ids);
+            }
+            $total_users = 0; // Not relevant for non-admins
         }
 
-        $where_cabang = $id_cabang > 0 ? "AND pj.id_cabang = $id_cabang" : '';
-
-        // Query top 10 products
-        $data = $this->db->query("
-            SELECT
-                p.nama_produk,
-                SUM(dp.jumlah_beli)  AS total_terjual
-            FROM detail_penjualan dp
-            JOIN penjualan pj ON dp.id_penjualan = pj.id
-            JOIN produk    p  ON dp.id_produk    = p.id
-            WHERE dp.status != 8 AND pj.status != 8
-              AND DATE(pj.tanggal_transaksi) BETWEEN ? AND ?
-              $where_cabang
-            GROUP BY p.id, p.nama_produk
-            ORDER BY total_terjual DESC
-            LIMIT 10
-        ", [$tgl_awal, $tgl_akhir])->result();
+        // 2. Recent Documents
+        $recent_docs_sql = "
+            SELECT d.*, f.name as folder_name, dr.name as drive_name, u.name as uploader_name
+            FROM documents d
+            LEFT JOIN folders f ON d.folder_id = f.id
+            LEFT JOIN drives dr ON d.drive_id = dr.id
+            LEFT JOIN users u ON d.created_by = u.id
+            WHERE d.status = 1
+        ";
         
-        $labels = [];
-        $totals = [];
-        foreach($data as $d) {
-            $labels[] = $d->nama_produk;
-            $totals[] = (int) $d->total_terjual;
+        if (!$is_admin && !empty($drive_ids)) {
+            $recent_docs_sql .= " AND d.drive_id IN (" . implode(',', $drive_ids) . ")";
+        } elseif (!$is_admin && empty($drive_ids)) {
+            $recent_docs_sql .= " AND 1=0"; // Return empty
         }
         
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => true,
-            'labels' => $labels,
-            'data'   => $totals
-        ]);
-        exit;
+        $recent_docs_sql .= " ORDER BY d.created_at DESC LIMIT 5";
+        $recent_docs = $this->db->query($recent_docs_sql)->fetchAll();
+
+        // 3. Activity Log
+        $activities = $this->db->query("
+            SELECT a.*, u.name as user_name, u.avatar
+            FROM activity_logs a
+            JOIN users u ON a.user_id = u.id
+            ORDER BY a.created_at DESC LIMIT 6
+        ")->fetchAll();
+
+        // 4. Chart Data (Storage per Drive) - Top 5
+        $chart_sql = "
+            SELECT dr.name, SUM(d.file_size) as total_size
+            FROM drives dr
+            LEFT JOIN documents d ON dr.id = d.drive_id AND d.status = 1
+            WHERE dr.status = 1
+        ";
+        if (!$is_admin && !empty($drive_ids)) {
+            $chart_sql .= " AND dr.id IN (" . implode(',', $drive_ids) . ")";
+        } elseif (!$is_admin && empty($drive_ids)) {
+            $chart_sql .= " AND 1=0";
+        }
+        $chart_sql .= " GROUP BY dr.id ORDER BY total_size DESC LIMIT 5";
+        $chart_data = $this->db->query($chart_sql)->fetchAll();
+
+        $data = [
+            'title'        => 'Dashboard',
+            'total_docs'   => $total_docs,
+            'total_size'   => $total_size,
+            'total_drives' => $total_drives,
+            'total_users'  => $total_users,
+            'recent_docs'  => $recent_docs,
+            'activities'   => $activities,
+            'chart_data'   => $chart_data,
+            'is_admin'     => $is_admin
+        ];
+
+        $this->load->view('dashboard/v_index', $data);
     }
 }
