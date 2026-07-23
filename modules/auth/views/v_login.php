@@ -1,19 +1,26 @@
 <?php require_once APPPATH . 'views/layout/header_auth.php'; ?>
 
 <div class="relative z-10 w-full max-w-md">
-    <!-- Logo -->
-    <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 mb-4 float-anim">
-            <img src="<?= site_url('assets/iass2.png') ?>" alt="Logo" class="w-full h-full object-contain">
+    <!-- Login Card (All in one) -->
+    <div class="bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] p-10 relative overflow-hidden">
+        
+        <!-- Logo & Title -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-24 h-20 mb-6 bg-gradient-to-b from-gray-50 to-gray-200 rounded-2xl shadow-[inset_0_2px_4px_rgba(255,255,255,1),0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100">
+                <img src="<?= site_url('assets/iass2.png') ?>" alt="Logo" class="w-12 h-12 object-contain drop-shadow-md">
+            </div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-[0.2em] uppercase">
+                E-DRIVE
+            </h1>
+            <p class="text-[10px] font-semibold text-slate-500 mt-2 uppercase tracking-[0.15em]">Drive untuk IASS Staf Elektrikal</p>
         </div>
-        <h1 class="text-2xl font-bold text-edrive-text tracking-tight">E-Drive</h1>
-        <p class="text-sm text-edrive-muted mt-1">Enterprise Document Management System</p>
-    </div>
 
-    <!-- Login Card -->
-    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-edrive-border p-8">
-        <h2 class="text-xl font-bold text-edrive-text mb-1">Selamat Datang</h2>
-        <p class="text-sm text-edrive-muted mb-6">Silakan masuk ke akun Anda</p>
+        <!-- Divider -->
+        <div class="flex items-center justify-center w-3/4 mx-auto mb-8 opacity-70">
+            <div class="h-px bg-slate-200 flex-1"></div>
+            <div class="mx-3 w-1.5 h-1.5 bg-slate-400 rotate-45"></div>
+            <div class="h-px bg-slate-200 flex-1"></div>
+        </div>
 
         <?php $error = Session::flashdata('error'); ?>
         <?php if ($error): ?>
@@ -27,30 +34,34 @@
             <?= csrf_field() ?>
             
             <!-- Username -->
-            <div class="mb-4">
-                <label class="block text-sm font-semibold text-edrive-text mb-2">
-                    <i class="fa-solid fa-user text-edrive-muted mr-1 text-xs"></i> Username
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
+                    Username
                 </label>
-                <input type="text" name="username" 
-                       class="w-full px-4 py-3 bg-edrive-bg border border-edrive-border rounded-xl text-edrive-text placeholder-gray-400
-                              focus:ring-2 focus:ring-edrive-accent/20 focus:border-edrive-accent focus:outline-none transition-all text-sm"
-                       placeholder="Masukkan username" 
-                       value="<?= set_value('username') ?>"
-                       required autofocus>
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" name="username" 
+                           class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400
+                                  focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 focus:outline-none transition-all text-sm font-medium"
+                           placeholder="Enter your username" 
+                           value="<?= set_value('username') ?>"
+                           required autofocus>
+                </div>
             </div>
 
             <!-- Password -->
-            <div class="mb-6">
-                <label class="block text-sm font-semibold text-edrive-text mb-2">
-                    <i class="fa-solid fa-lock text-edrive-muted mr-1 text-xs"></i> Password
+            <div class="mb-8">
+                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">
+                    Password
                 </label>
                 <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="password" name="password" id="password-field"
-                           class="w-full px-4 py-3 bg-edrive-bg border border-edrive-border rounded-xl text-edrive-text placeholder-gray-400
-                                  focus:ring-2 focus:ring-edrive-accent/20 focus:border-edrive-accent focus:outline-none transition-all text-sm pr-12"
-                           placeholder="Masukkan password" required>
+                           class="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400
+                                  focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 focus:outline-none transition-all text-sm font-medium"
+                           placeholder="Enter your password" required>
                     <button type="button" onclick="togglePassword()" 
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-edrive-muted hover:text-edrive-accent transition-colors p-1">
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-2">
                         <i class="fa-solid fa-eye" id="toggle-pw-icon"></i>
                     </button>
                 </div>
@@ -58,9 +69,9 @@
 
             <!-- Login Button -->
             <button type="submit" 
-                    class="w-full bg-gradient-to-r from-edrive-accent to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-edrive-accent/20 hover:shadow-xl hover:shadow-edrive-accent/30 transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                    class="w-full bg-[#111827] hover:bg-black text-white font-bold py-3.5 px-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm tracking-wide">
                 <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Masuk</span>
+                <span>Login</span>
             </button>
         </form>
     </div>

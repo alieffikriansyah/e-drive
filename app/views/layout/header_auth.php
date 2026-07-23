@@ -33,11 +33,10 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
         }
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
         .float-anim { animation: float 6s ease-in-out infinite; }
     </style>
 </head>
-<body class="bg-edrive-bg font-sans antialiased min-h-screen flex items-center justify-center p-4">
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-40 -right-40 w-96 h-96 bg-edrive-accent/5 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-    </div>
+<body class="bg-[#F4F6F9] font-sans antialiased min-h-screen flex items-center justify-center p-4">
