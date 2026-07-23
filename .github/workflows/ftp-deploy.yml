@@ -1,0 +1,29 @@
+name: Deploy to cPanel via FTP
+
+on:
+  push:
+    branches:
+      - main # Akan otomatis deploy setiap kali Anda push ke branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Upload to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: public_html/e-drive.digitalreportelektrikal.com/
+          
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.env
+            e_drive_backup.sql
+            *.zip
+            Cara_Penggunaan_Framework.txt

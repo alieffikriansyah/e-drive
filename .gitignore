@@ -1,0 +1,8 @@
+.env
+vendor/
+node_modules/
+.DS_Store
+storage/
+upload/
+e_drive_backup.sql
+*.zip
