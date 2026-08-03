@@ -3,7 +3,6 @@
 class ScheduleModel {
     public $id;
     public $user_id;
-    public $drive_id;
     public $attachment_document_id;
     public $title;
     public $description;
@@ -31,7 +30,6 @@ class ScheduleModel {
 
     // Optional relation properties
     public $owner_name;
-    public $drive_name;
     public $attachment_name;
 
     public function __construct($data = []) {

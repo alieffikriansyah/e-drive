@@ -172,12 +172,6 @@
                             class="fa-solid fa-lock text-slate-400 w-4"></i> Private Saya</span>
                 </label>
                 <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" value="drive" x-model="filters.visibility" @change="filterEvents()"
-                        class="w-4 h-4 rounded border-slate-300 text-edrive-accent focus:ring-edrive-accent bg-white">
-                    <span class="text-sm text-slate-600 group-hover:text-slate-900"><i
-                            class="fa-solid fa-users text-slate-400 w-4"></i> Drive Shared</span>
-                </label>
-                <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" value="public" x-model="filters.visibility" @change="filterEvents()"
                         class="w-4 h-4 rounded border-slate-300 text-edrive-accent focus:ring-edrive-accent bg-white">
                     <span class="text-sm text-slate-600 group-hover:text-slate-900"><i
@@ -290,26 +284,14 @@
                             class="w-full bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-edrive-accent">
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+                    <div class="flex gap-4 items-center"
                         :class="{'opacity-60 pointer-events-none': form.id && !canEditEvent()}">
                         <div class="flex gap-4 items-center">
                             <i class="fa-solid fa-eye text-slate-400 w-5 text-center"></i>
                             <select x-model="form.visibility" :disabled="form.id && !canEditEvent()"
                                 class="w-full bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-edrive-accent">
                                 <option value="private">Private (Hanya Saya)</option>
-                                <option value="drive">Drive (Shared)</option>
                                 <option value="public">Public (Semua User)</option>
-                            </select>
-                        </div>
-
-                        <div class="flex gap-4 items-center" x-show="form.visibility === 'drive'">
-                            <i class="fa-solid fa-folder text-slate-400 w-5 text-center"></i>
-                            <select x-model="form.drive_id"
-                                class="w-full bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:ring-2 focus:ring-edrive-accent">
-                                <option value="">Pilih Drive...</option>
-                                <?php foreach ($drives as $drive): ?>
-                                    <option value="<?= $drive->id ?>"><?= htmlspecialchars($drive->name) ?></option>
-                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -353,7 +335,7 @@
             isModalOpen: false,
             searchQuery: '',
             filters: {
-                visibility: ['private', 'drive', 'public']
+                visibility: ['private', 'public']
             },
             colors: ['#3788d8', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#64748B'],
             form: {
@@ -367,7 +349,6 @@
                 end_time: '10:00',
                 all_day: false,
                 visibility: 'private',
-                drive_id: '',
                 color: '#3788d8',
                 user_id: null,
                 owner_name: ''
@@ -432,7 +413,6 @@
                             description: props.description,
                             location: props.location,
                             visibility: props.visibility,
-                            drive_id: props.drive_id,
                             color: ev.backgroundColor,
                             user_id: props.user_id,
                             owner_name: props.owner_name
@@ -498,7 +478,7 @@
                     start_time: '09:00',
                     end_date: new Date().toISOString().split('T')[0],
                     end_time: '10:00',
-                    all_day: false, visibility: 'private', drive_id: '', color: '#3788d8',
+                    all_day: false, visibility: 'private', color: '#3788d8',
                     user_id: null, owner_name: ''
                 };
             },
@@ -545,7 +525,6 @@
                 formData.append('description', event.extendedProps.description || '');
                 formData.append('location', event.extendedProps.location || '');
                 formData.append('visibility', event.extendedProps.visibility || 'private');
-                formData.append('drive_id', event.extendedProps.drive_id || '');
                 formData.append('color', event.backgroundColor);
 
                 try {

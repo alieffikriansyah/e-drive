@@ -17,17 +17,9 @@ class Schedule extends Controller {
     public function index() {
         $data = [
             'title' => 'Schedule & Calendar',
-            'user_id' => Session::get('user_id'),
-            // Fetch accessible drives for the modal dropdown
-            'drives' => $this->get_drives_dropdown()
+            'user_id' => Session::get('user_id')
         ];
         $this->load->view('schedule/v_index', $data);
-    }
-
-    private function get_drives_dropdown() {
-        $this->load->model('drive/MOD', 'drive_mod');
-        $is_admin = in_array(Session::get('role_id'), [1, 2]);
-        return $this->drive_mod->get_accessible_drives($is_admin, Session::get('user_id'), Session::get('role_id'));
     }
 
     // --- API Endpoints for FullCalendar ---
@@ -68,7 +60,6 @@ class Schedule extends Controller {
                         'category' => $ev->category,
                         'priority' => $ev->priority,
                         'visibility' => $ev->visibility,
-                        'drive_id' => $ev->drive_id,
                         'user_id' => $ev->user_id,
                         'owner_name' => $ev->owner_name
                     ]
@@ -102,8 +93,7 @@ class Schedule extends Controller {
             'end_time' => !empty($_POST['end_time']) ? $_POST['end_time'] : null,
             'all_day' => isset($_POST['all_day']) && $_POST['all_day'] == '1' ? 1 : 0,
             'color' => $_POST['color'] ?? '#2563EB',
-            'visibility' => $_POST['visibility'] ?? 'private',
-            'drive_id' => !empty($_POST['drive_id']) ? (int)$_POST['drive_id'] : null
+            'visibility' => $_POST['visibility'] ?? 'private'
         ];
 
         try {

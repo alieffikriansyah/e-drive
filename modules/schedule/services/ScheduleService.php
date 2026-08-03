@@ -7,7 +7,6 @@ class ScheduleService {
     private $user_id;
     private $role_id;
     private $is_admin;
-    private $accessible_drives;
 
     public function __construct() {
         $this->repo = new ScheduleRepository();
@@ -16,12 +15,6 @@ class ScheduleService {
         
         // E-Drive role: 1 = Admin, 2 = PM, 3 = Staff, etc. (Check AuthMiddleware)
         $this->is_admin = in_array($this->role_id, [1, 2]); 
-        
-        // Load accessible drives
-        $CI =& Controller::get_instance();
-        $CI->load->model('drive/MOD', 'drive_mod');
-        $drives = $CI->drive_mod->get_accessible_drives($this->is_admin, $this->user_id, $this->role_id);
-        $this->accessible_drives = array_column($drives, 'id');
     }
 
     public function getAccessibleEvents($start, $end) {
@@ -36,8 +29,6 @@ class ScheduleService {
             if ($event->user_id == $this->user_id) {
                 $filtered[] = $event;
             } elseif ($event->visibility === 'public') {
-                $filtered[] = $event;
-            } elseif ($event->visibility === 'drive' && in_array($event->drive_id, $this->accessible_drives)) {
                 $filtered[] = $event;
             }
         }
@@ -54,10 +45,6 @@ class ScheduleService {
         }
         
         if ($event->visibility === 'public') return $event;
-        
-        if ($event->visibility === 'drive' && in_array($event->drive_id, $this->accessible_drives)) {
-            return $event;
-        }
         
         return null;
     }
@@ -86,7 +73,14 @@ class ScheduleService {
             throw new Exception("Anda tidak memiliki akses untuk mengubah agenda ini.");
         }
 
+        // Protect fields yang tidak boleh di-overwrite saat update
+        unset($data['user_id']);
+        unset($data['status']);
+
         $model = new ScheduleModel($data);
+        // Pertahankan nilai asli dari database
+        $model->user_id = $event->user_id;
+        $model->status = $event->status;
         $model->updated_by = $this->user_id;
         $model->updated_at = date('Y-m-d H:i:s');
         

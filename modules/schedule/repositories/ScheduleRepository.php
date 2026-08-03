@@ -10,10 +10,9 @@ class ScheduleRepository {
     }
 
     public function findAll($filters = []) {
-        $sql = "SELECT s.*, u.name as owner_name, d.name as drive_name, doc.name as attachment_name 
+        $sql = "SELECT s.*, u.name as owner_name, doc.name as attachment_name 
                 FROM schedule_calendars s
                 LEFT JOIN users u ON s.user_id = u.id
-                LEFT JOIN drives d ON s.drive_id = d.id
                 LEFT JOIN documents doc ON s.attachment_document_id = doc.id
                 WHERE s.status != 8"; // 8 is Soft Delete
 
@@ -66,10 +65,9 @@ class ScheduleRepository {
     }
 
     public function findById($id) {
-        $sql = "SELECT s.*, u.name as owner_name, d.name as drive_name, doc.name as attachment_name 
+        $sql = "SELECT s.*, u.name as owner_name, doc.name as attachment_name 
                 FROM schedule_calendars s
                 LEFT JOIN users u ON s.user_id = u.id
-                LEFT JOIN drives d ON s.drive_id = d.id
                 LEFT JOIN documents doc ON s.attachment_document_id = doc.id
                 WHERE s.id = ? AND s.status != 8";
                 
@@ -85,7 +83,6 @@ class ScheduleRepository {
         $data = $model->toArray();
         unset($data['id']); // Remove PK
         unset($data['owner_name']); // Remove relations
-        unset($data['drive_name']);
         unset($data['attachment_name']);
         
         // Remove nulls so DB defaults can trigger if needed, or explicitly insert them
@@ -100,10 +97,15 @@ class ScheduleRepository {
         $data = $model->toArray();
         unset($data['id']);
         unset($data['owner_name']);
-        unset($data['drive_name']);
         unset($data['attachment_name']);
         unset($data['created_at']);
         unset($data['created_by']);
+        unset($data['deleted_at']);
+        
+        // Filter null values agar tidak menimpa data existing di DB
+        $data = array_filter($data, function($val) {
+            return $val !== null;
+        });
         
         $this->db->table('schedule_calendars')->where('id', $id)->update($data);
         return true;
