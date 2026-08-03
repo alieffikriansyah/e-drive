@@ -29,15 +29,18 @@ class MOD extends Model {
     }
 
     public function get_folders_in_drive($drive_id, $parent_folder_id = null) {
-        $this->db->table('folders')
-                 ->where('drive_id', $drive_id)
-                 ->where('status', 1);
+        $this->db->table('folders f')
+                 ->select('f.*, 
+                           ((SELECT COUNT(*) FROM folders sub WHERE sub.parent_id = f.id AND sub.status = 1) + 
+                           (SELECT COUNT(*) FROM documents doc WHERE doc.folder_id = f.id AND doc.status = 1)) as dynamic_total_files')
+                 ->where('f.drive_id', $drive_id)
+                 ->where('f.status', 1);
         if ($parent_folder_id) {
-            $this->db->where('parent_id', $parent_folder_id);
+            $this->db->where('f.parent_id', $parent_folder_id);
         } else {
-            $this->db->where('parent_id IS NULL');
+            $this->db->where('f.parent_id IS NULL');
         }
-        return $this->db->order_by('name', 'ASC')->result();
+        return $this->db->order_by('f.name', 'ASC')->result();
     }
 
     public function get_documents_in_drive($drive_id, $folder_id = null) {

@@ -1,5 +1,63 @@
 <?php require_once APPPATH . 'views/layout/header.php'; ?>
 
+<?php
+// Smart icon mapping based on drive name keywords
+if (!function_exists('get_drive_icon')) {
+    function get_drive_icon($name) {
+        $name_lower = strtolower($name);
+        $icon_map = [
+            'laporan'     => 'fa-solid fa-file-lines',
+            'report'      => 'fa-solid fa-file-lines',
+            'sdm'         => 'fa-solid fa-users',
+            'hr'          => 'fa-solid fa-users',
+            'human'       => 'fa-solid fa-users',
+            'penagihan'   => 'fa-solid fa-file-invoice-dollar',
+            'invoice'     => 'fa-solid fa-file-invoice-dollar',
+            'billing'     => 'fa-solid fa-file-invoice-dollar',
+            'visual'      => 'fa-solid fa-lightbulb',
+            'runway'      => 'fa-solid fa-lightbulb',
+            'admin'       => 'fa-solid fa-shield-halved',
+            'project'     => 'fa-solid fa-diagram-project',
+            'manager'     => 'fa-solid fa-user-tie',
+            'energy'      => 'fa-solid fa-bolt',
+            'power'       => 'fa-solid fa-plug-circle-bolt',
+            'supply'      => 'fa-solid fa-boxes-stacked',
+            'aid'         => 'fa-solid fa-hand-holding-heart',
+            'terminal'    => 'fa-solid fa-building',
+            'logistik'    => 'fa-solid fa-truck-fast',
+            'logistics'   => 'fa-solid fa-truck-fast',
+            'k3'          => 'fa-solid fa-helmet-safety',
+            'safety'      => 'fa-solid fa-helmet-safety',
+            'keselamatan' => 'fa-solid fa-helmet-safety',
+            'kesehatan'   => 'fa-solid fa-heart-pulse',
+            'finance'     => 'fa-solid fa-coins',
+            'keuangan'    => 'fa-solid fa-coins',
+            'legal'       => 'fa-solid fa-scale-balanced',
+            'hukum'       => 'fa-solid fa-scale-balanced',
+            'it'          => 'fa-solid fa-server',
+            'teknik'      => 'fa-solid fa-gears',
+            'engineering' => 'fa-solid fa-gears',
+            'marketing'   => 'fa-solid fa-bullhorn',
+            'sales'       => 'fa-solid fa-handshake',
+            'operasi'     => 'fa-solid fa-cogs',
+            'operation'   => 'fa-solid fa-cogs',
+            'quality'     => 'fa-solid fa-clipboard-check',
+            'mutu'        => 'fa-solid fa-clipboard-check',
+            'arsip'       => 'fa-solid fa-box-archive',
+            'archive'     => 'fa-solid fa-box-archive',
+            'shared'      => 'fa-solid fa-share-nodes',
+            'public'      => 'fa-solid fa-globe',
+        ];
+        foreach ($icon_map as $keyword => $icon) {
+            if (strpos($name_lower, $keyword) !== false) {
+                return $icon;
+            }
+        }
+        return 'fa-solid fa-hard-drive';
+    }
+}
+?>
+
 <div class="space-y-6">
     <!-- Header Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -9,7 +67,7 @@
                 <?php if ($current_folder_id): ?>
                     <i class="fa-solid fa-folder-open text-yellow-500"></i>
                 <?php else: ?>
-                    <i class="<?= htmlspecialchars($drive->icon ?? 'fa-solid fa-hard-drive') ?>"
+                    <i class="<?= htmlspecialchars(get_drive_icon($drive->name)) ?>"
                         style="color: <?= $drive->color ?? '#3B82F6' ?>"></i>
                 <?php endif; ?>
                 <?= htmlspecialchars($title) ?>
@@ -59,7 +117,7 @@
                             <?= htmlspecialchars($f->name) ?>
                         </p>
                         <p class="text-[10px] text-edrive-muted mt-1">
-                            <?= $f->total_files ?> items
+                            <?= $f->dynamic_total_files ?? 0 ?> items
                         </p>
                     </a>
                 <?php endforeach; ?>
@@ -70,7 +128,30 @@
     <!-- Files Table -->
     <?php if (!empty($documents) || (empty($folders) && empty($documents))): ?>
         <div>
-            <h3 class="text-sm font-semibold text-edrive-muted mb-4 uppercase tracking-wider">Files</h3>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h3 class="text-sm font-semibold text-edrive-muted uppercase tracking-wider">Files</h3>
+                <div class="flex items-center gap-3">
+                    <div class="relative flex-1 sm:flex-none sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-edrive-muted text-sm"></i>
+                        <input type="text" 
+                               id="file-search-input" 
+                               placeholder="Cari file di folder ini..." 
+                               class="w-full pl-10 pr-10 py-2 bg-white border border-edrive-border rounded-xl text-sm 
+                                      focus:ring-2 focus:ring-edrive-accent/20 focus:border-edrive-accent 
+                                      transition-all outline-none placeholder:text-edrive-light"
+                               autocomplete="off">
+                        <button id="file-search-clear" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-edrive-muted hover:text-edrive-text 
+                                       transition-colors hidden"
+                                onclick="clearFileSearch()" title="Hapus pencarian (Esc)">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+                    <div id="file-search-count" class="text-xs text-edrive-muted hidden whitespace-nowrap">
+                        <span id="file-match-count">0</span> file ditemukan
+                    </div>
+                </div>
+            </div>
             <div class="glass-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="table-light">
@@ -94,7 +175,7 @@
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($documents as $doc): ?>
-                                    <tr class="group">
+                                    <tr class="group file-row" data-filename="<?= strtolower(htmlspecialchars($doc->name . '.' . $doc->file_type)) ?>">
                                         <td class="text-center">
                                             <button class="text-gray-300 hover:text-yellow-400 transition-colors" title="Bintangi">
                                                 <i class="fa-regular fa-star"></i>
@@ -135,6 +216,9 @@
                                                     <i class="fa-solid fa-pen-to-square text-[13px]"></i>
                                                 </a>
                                                 <?php endif; ?>
+                                                <button class="w-8 h-8 rounded hover:bg-blue-50 text-blue-500 flex items-center justify-center transition tooltip" data-tip="Rename" onclick="renameFile(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>')">
+                                                    <i class="fa-solid fa-i-cursor text-[13px]"></i>
+                                                </button>
                                                 <button class="w-8 h-8 rounded hover:bg-gray-100 text-green-600 flex items-center justify-center transition tooltip" data-tip="Download" onclick="downloadFile(<?= $doc->id ?>)">
                                                     <i class="fa-solid fa-download text-[13px]"></i>
                                                 </button>
@@ -276,6 +360,38 @@
         }
     });
 
+    let currentContextFolderId = null;
+
+    function showFolderMenu(e, id) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        currentContextFolderId = id;
+        
+        const menu = document.getElementById('folderContextMenu');
+        menu.classList.remove('hidden');
+        
+        menu.style.left = e.clientX + 'px';
+        menu.style.top = e.clientY + 'px';
+        
+        document.querySelectorAll('.context-menu').forEach(m => {
+            if (m.id !== 'folderContextMenu') m.classList.add('hidden');
+        });
+    }
+
+    function triggerRenameFolder() {
+        document.getElementById('folderContextMenu').classList.add('hidden');
+        if (currentContextFolderId) {
+            const folderName = document.querySelector(`a[oncontextmenu="showFolderMenu(event, ${currentContextFolderId}); return false;"] p.font-semibold`).innerText;
+            renameFolder(currentContextFolderId, folderName);
+        }
+    }
+
+    function triggerDeleteFolder() {
+        document.getElementById('folderContextMenu').classList.add('hidden');
+        if (currentContextFolderId) deleteFolder(currentContextFolderId);
+    }
+
     function toggleContextMenu(e, id) {
         e.stopPropagation();
         document.querySelectorAll('.context-menu').forEach(menu => {
@@ -326,6 +442,46 @@
     function shareFile(id) { showInfo('Share file ' + id + ' segera hadir (Phase 7)'); }
     function showVersions(id) { showInfo('History versi file ' + id + ' segera hadir (Phase 7)'); }
 
+    function renameFile(id, currentName) {
+        Swal.fire({
+            title: 'Rename File',
+            input: 'text',
+            inputValue: currentName,
+            inputPlaceholder: 'Nama file baru...',
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            confirmButtonText: 'Simpan',
+            cancelButtonText: 'Batal',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl', cancelButton: 'rounded-xl' },
+            inputValidator: (value) => {
+                if (!value || value.trim() === '') {
+                    return 'Nama file tidak boleh kosong!';
+                }
+            },
+            preConfirm: async (value) => {
+                try {
+                    const response = await fetch(BASE_URL + 'document/rename', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': CSRF_TOKEN },
+                        body: JSON.stringify({ document_id: id, new_name: value.trim() })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (result.value.status) {
+                    showSuccess(result.value.message);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(result.value.message);
+                }
+            }
+        });
+    }
+
     async function deleteFile(id) {
         if (await confirmAction('Hapus File?', 'File akan dipindahkan ke Recycle Bin.', 'warning')) {
             showLoading('Menghapus...');
@@ -374,7 +530,193 @@
             }
         });
     }
+
+    function renameFolder(id, currentName) {
+        Swal.fire({
+            title: 'Rename Folder',
+            input: 'text',
+            inputValue: currentName,
+            inputPlaceholder: 'Nama folder baru...',
+            showCancelButton: true,
+            confirmButtonColor: '#2563EB',
+            confirmButtonText: 'Simpan',
+            cancelButtonText: 'Batal',
+            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl', cancelButton: 'rounded-xl' },
+            inputValidator: (value) => {
+                if (!value || value.trim() === '') {
+                    return 'Nama folder tidak boleh kosong!';
+                }
+            },
+            preConfirm: async (value) => {
+                try {
+                    const response = await fetch(BASE_URL + 'folder/rename', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-Token': CSRF_TOKEN },
+                        body: JSON.stringify({ folder_id: id, new_name: value.trim() })
+                    });
+                    return await response.json();
+                } catch (error) {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (result.value.status) {
+                    showSuccess(result.value.message);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(result.value.message);
+                }
+            }
+        });
+    }
+
+    async function deleteFolder(id) {
+        if (await confirmAction('Hapus Folder?', 'Folder akan dipindahkan ke Recycle Bin.', 'warning')) {
+            showLoading('Menghapus...');
+            const data = await fetchAPI('folder/delete', { method: 'POST', body: { folder_id: id } });
+            hideLoading();
+            if (data && data.status) {
+                showSuccess(data.message);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showError(data ? data.message : 'Gagal menghapus folder');
+            }
+        }
+    }
+
+    // --- File Search/Filter Logic ---
+    const fileSearchInput = document.getElementById('file-search-input');
+    const fileSearchClear = document.getElementById('file-search-clear');
+    const fileSearchCount = document.getElementById('file-search-count');
+    const fileMatchCount = document.getElementById('file-match-count');
+
+    if (fileSearchInput) {
+        let debounceTimer;
+        fileSearchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => filterFiles(this.value), 150);
+        });
+
+        // Ctrl+F focus ke search input
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                if (fileSearchInput) {
+                    e.preventDefault();
+                    fileSearchInput.focus();
+                    fileSearchInput.select();
+                }
+            }
+        });
+
+        // Escape untuk clear search
+        fileSearchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearFileSearch();
+                this.blur();
+            }
+        });
+    }
+
+    function filterFiles(query) {
+        const rows = document.querySelectorAll('tr.file-row');
+        const keyword = query.trim().toLowerCase();
+
+        // Toggle clear button
+        if (fileSearchClear) {
+            fileSearchClear.classList.toggle('hidden', keyword === '');
+        }
+
+        if (keyword === '') {
+            rows.forEach(row => {
+                row.style.display = '';
+                unhighlightText(row);
+            });
+            if (fileSearchCount) fileSearchCount.classList.add('hidden');
+            showNoResultMessage(false);
+            return;
+        }
+
+        let matchCount = 0;
+        rows.forEach(row => {
+            const filename = row.getAttribute('data-filename') || '';
+            if (filename.includes(keyword)) {
+                row.style.display = '';
+                highlightText(row, keyword);
+                matchCount++;
+            } else {
+                row.style.display = 'none';
+                unhighlightText(row);
+            }
+        });
+
+        // Update counter
+        if (fileSearchCount) {
+            fileSearchCount.classList.remove('hidden');
+            fileMatchCount.textContent = matchCount;
+        }
+
+        showNoResultMessage(matchCount === 0 && rows.length > 0);
+    }
+
+    function highlightText(row, keyword) {
+        const nameEl = row.querySelector('p.font-medium');
+        if (!nameEl) return;
+        const original = nameEl.getAttribute('data-original') || nameEl.textContent;
+        nameEl.setAttribute('data-original', original);
+        const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escaped})`, 'gi');
+        nameEl.innerHTML = original.replace(regex, '<mark class="bg-yellow-200 text-yellow-900 rounded px-0.5">$1</mark>');
+    }
+
+    function unhighlightText(row) {
+        const nameEl = row.querySelector('p.font-medium');
+        if (!nameEl) return;
+        const original = nameEl.getAttribute('data-original');
+        if (original) nameEl.textContent = original;
+    }
+
+    function showNoResultMessage(show) {
+        let noResult = document.getElementById('no-search-result');
+        if (show) {
+            if (!noResult) {
+                const tbody = document.querySelector('.table-light tbody');
+                if (tbody) {
+                    const tr = document.createElement('tr');
+                    tr.id = 'no-search-result';
+                    tr.innerHTML = `
+                        <td colspan="6" class="text-center py-8 text-edrive-muted">
+                            <i class="fa-solid fa-magnifying-glass text-2xl mb-2 text-gray-300 block"></i>
+                            <p class="text-sm">Tidak ada file yang cocok dengan pencarian</p>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+        } else {
+            if (noResult) noResult.remove();
+        }
+    }
+
+    function clearFileSearch() {
+        if (fileSearchInput) {
+            fileSearchInput.value = '';
+            filterFiles('');
+            fileSearchInput.focus();
+        }
+    }
 </script>
+
+<!-- Folder Context Menu -->
+<div id="folderContextMenu" class="context-menu hidden fixed bg-white shadow-lg rounded-xl border border-gray-200 z-50 overflow-hidden w-48 text-sm">
+    <button class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700" onclick="triggerRenameFolder()">
+        <i class="fa-solid fa-i-cursor text-blue-500 w-4"></i> Rename Folder
+    </button>
+    <div class="border-t border-gray-100 my-1"></div>
+    <button class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600" onclick="triggerDeleteFolder()">
+        <i class="fa-solid fa-trash w-4"></i> Hapus
+    </button>
+</div>
 
 <!-- Preview Modal -->
 <div id="preview-modal" class="fixed inset-0 bg-gray-900/90 z-[100] hidden flex flex-col backdrop-blur-sm transition-all duration-300">

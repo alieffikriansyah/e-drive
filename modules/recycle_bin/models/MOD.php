@@ -27,4 +27,32 @@ class MOD extends Model {
         $this->db->query("DELETE FROM favorites WHERE entity_type = 'document' AND entity_id = ?", [$doc_id]);
         return $this->db->query("DELETE FROM documents WHERE id = ?", [$doc_id]);
     }
+
+    public function get_deleted_folders($drive_ids, $is_admin = false) {
+        $where = "f.status = 8";
+        if (!$is_admin) {
+            if (empty($drive_ids)) return [];
+            $in_drives = implode(',', $drive_ids);
+            $where .= " AND f.drive_id IN ($in_drives)";
+        }
+        
+        return $this->db->query("
+            SELECT f.*, dr.name as drive_name, u.name as deleted_by_name
+            FROM folders f
+            LEFT JOIN drives dr ON f.drive_id = dr.id
+            LEFT JOIN users u ON f.updated_by = u.id
+            WHERE $where
+            ORDER BY f.deleted_at DESC
+        ")->fetchAll();
+    }
+    
+    public function restore_folder($folder_id) {
+        return $this->db->table('folders')->where('id', $folder_id)->update(['status' => 1]);
+    }
+    
+    public function permanent_delete_folder($folder_id) {
+        // Soft delete doesn't physically remove the physical directory, but permanent delete could.
+        // For now, just remove from DB as per the simpler plan.
+        return $this->db->query("DELETE FROM folders WHERE id = ?", [$folder_id]);
+    }
 }

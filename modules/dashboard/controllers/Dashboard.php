@@ -69,19 +69,17 @@ class Dashboard extends Controller {
             ORDER BY a.created_at DESC LIMIT 6
         ")->fetchAll();
 
-        // 4. Chart Data (Storage per Drive) - Top 5
+        // 4. Chart Data (Storage per Drive)
         $chart_sql = "
             SELECT dr.name, SUM(d.file_size) as total_size
             FROM drives dr
             LEFT JOIN documents d ON dr.id = d.drive_id AND d.status = 1
             WHERE dr.status = 1
         ";
-        if (!$is_admin && !empty($drive_ids)) {
-            $chart_sql .= " AND dr.id IN (" . implode(',', $drive_ids) . ")";
-        } elseif (!$is_admin && empty($drive_ids)) {
-            $chart_sql .= " AND 1=0";
+        if (!$is_admin) {
+            $chart_sql .= " AND dr.owner_role_id = " . intval($role_id);
         }
-        $chart_sql .= " GROUP BY dr.id ORDER BY total_size DESC LIMIT 5";
+        $chart_sql .= " GROUP BY dr.id ORDER BY total_size DESC";
         $chart_data = $this->db->query($chart_sql)->fetchAll();
 
         $data = [

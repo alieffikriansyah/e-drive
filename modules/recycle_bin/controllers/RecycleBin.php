@@ -24,10 +24,12 @@ class RecycleBin extends Controller {
         $drive_ids = array_column($allowed_drives, 'id');
 
         $deleted_docs = $this->mod->get_deleted_documents($drive_ids, $is_admin);
+        $deleted_folders = $this->mod->get_deleted_folders($drive_ids, $is_admin);
 
         $data = [
             'title'        => 'Recycle Bin',
             'documents'    => $deleted_docs,
+            'folders'      => $deleted_folders,
             'breadcrumb'   => [['name' => 'Recycle Bin']]
         ];
 
@@ -108,5 +110,103 @@ class RecycleBin extends Controller {
         );
 
         echo json_encode(['status' => true, 'message' => 'Dokumen dihapus secara permanen.']);
+    }
+
+    public function restore_folder() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = $_POST;
+        }
+
+        $folder_id = isset($input['folder_id']) ? (int)$input['folder_id'] : 0;
+        
+        $folder = $this->db->table('folders')->with_trashed()->where('id', $folder_id)->where('status', 8)->row();
+        if (!$folder) {
+            echo json_encode(['status' => false, 'message' => "Folder tidak ditemukan di Recycle Bin (ID: $folder_id)."]);
+            return;
+        }
+
+        if (!AuthMiddleware::canAccessDrive($folder->drive_id)) {
+            echo json_encode(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        $this->mod->restore_folder($folder_id);
+
+        $this->db->query(
+            "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, ip_address, created_at, status) VALUES (?, 'RESTORE', 'folder', ?, ?, ?, NOW(), 1)",
+            [Session::get('user_id'), $folder_id, "Memulihkan folder: {$folder->name}", $_SERVER['REMOTE_ADDR'] ?? '']
+        );
+
+        echo json_encode(['status' => true, 'message' => 'Folder berhasil dipulihkan.']);
+    }
+
+    public function permanent_delete_folder() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = $_POST;
+        }
+
+        $folder_id = isset($input['folder_id']) ? (int)$input['folder_id'] : 0;
+        
+        $folder = $this->db->table('folders')->with_trashed()->where('id', $folder_id)->where('status', 8)->row();
+        if (!$folder) {
+            echo json_encode(['status' => false, 'message' => 'Folder tidak ditemukan.']);
+            return;
+        }
+
+        if (!AuthMiddleware::canAccessDrive($folder->drive_id)) {
+            echo json_encode(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        // Helper to recursively delete directory
+        $deleteDir = function($dirPath) use (&$deleteDir) {
+            if (!is_dir($dirPath)) return;
+            if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') $dirPath .= '/';
+            $files = glob($dirPath . '*', GLOB_MARK);
+            foreach ($files as $file) {
+                if (is_dir($file)) {
+                    $deleteDir($file);
+                } else {
+                    @unlink($file);
+                }
+            }
+            @rmdir($dirPath);
+        };
+
+        // Find and delete physical folder
+        $year = date('Y', strtotime($folder->created_at));
+        $physical_dir = STORAGEPATH . 'drives/' . $folder->created_by . '/' . $year . $folder->path;
+        $deleteDir($physical_dir);
+
+        // Delete documents under this folder in DB
+        $docs = $this->db->table('documents')->where('folder_id', $folder_id)->get();
+        foreach ($docs as $doc) {
+            $this->mod->permanent_delete($doc->id);
+        }
+
+        $this->mod->permanent_delete_folder($folder_id);
+
+        $this->db->query(
+            "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, ip_address, created_at, status) VALUES (?, 'DELETE_PERMANENT', 'folder', ?, ?, ?, NOW(), 1)",
+            [Session::get('user_id'), $folder_id, "Menghapus permanen folder: {$folder->name}", $_SERVER['REMOTE_ADDR'] ?? '']
+        );
+
+        echo json_encode(['status' => true, 'message' => 'Folder dihapus secara permanen.']);
     }
 }

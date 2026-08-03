@@ -36,15 +36,76 @@
             <p class="text-edrive-muted mt-1 text-sm">Anda belum memiliki akses ke drive manapun.</p>
         </div>
     <?php else: ?>
+        <?php
+        // Smart icon mapping based on drive name keywords
+        function get_drive_icon($name) {
+            $name_lower = strtolower($name);
+            $icon_map = [
+                // Specific compound keywords FIRST (before generic 'admin')
+                'laporan'     => 'fa-solid fa-file-lines',
+                'report'      => 'fa-solid fa-file-lines',
+                'sdm'         => 'fa-solid fa-users',
+                'hr'          => 'fa-solid fa-users',
+                'human'       => 'fa-solid fa-users',
+                'penagihan'   => 'fa-solid fa-file-invoice-dollar',
+                'invoice'     => 'fa-solid fa-file-invoice-dollar',
+                'billing'     => 'fa-solid fa-file-invoice-dollar',
+                // Visual / Runway
+                'visual'      => 'fa-solid fa-lightbulb',
+                'runway'      => 'fa-solid fa-lightbulb',
+                // Role/Department icons
+                'admin'       => 'fa-solid fa-shield-halved',
+                'project'     => 'fa-solid fa-diagram-project',
+                'manager'     => 'fa-solid fa-user-tie',
+                // Domain-specific icons
+                'energy'      => 'fa-solid fa-bolt',
+                'power'       => 'fa-solid fa-plug-circle-bolt',
+                'supply'      => 'fa-solid fa-boxes-stacked',
+                'aid'         => 'fa-solid fa-hand-holding-heart',
+                'terminal'    => 'fa-solid fa-building',
+                'logistik'    => 'fa-solid fa-truck-fast',
+                'logistics'   => 'fa-solid fa-truck-fast',
+                'k3'          => 'fa-solid fa-helmet-safety',
+                'safety'      => 'fa-solid fa-helmet-safety',
+                'keselamatan' => 'fa-solid fa-helmet-safety',
+                'kesehatan'   => 'fa-solid fa-heart-pulse',
+                'finance'     => 'fa-solid fa-coins',
+                'keuangan'    => 'fa-solid fa-coins',
+                'legal'       => 'fa-solid fa-scale-balanced',
+                'hukum'       => 'fa-solid fa-scale-balanced',
+                'it'          => 'fa-solid fa-server',
+                'teknik'      => 'fa-solid fa-gears',
+                'engineering' => 'fa-solid fa-gears',
+                'marketing'   => 'fa-solid fa-bullhorn',
+                'sales'       => 'fa-solid fa-handshake',
+                'operasi'     => 'fa-solid fa-cogs',
+                'operation'   => 'fa-solid fa-cogs',
+                'quality'     => 'fa-solid fa-clipboard-check',
+                'mutu'        => 'fa-solid fa-clipboard-check',
+                'arsip'       => 'fa-solid fa-box-archive',
+                'archive'     => 'fa-solid fa-box-archive',
+                'shared'      => 'fa-solid fa-share-nodes',
+                'public'      => 'fa-solid fa-globe',
+            ];
+            
+            foreach ($icon_map as $keyword => $icon) {
+                if (strpos($name_lower, $keyword) !== false) {
+                    return $icon;
+                }
+            }
+            return 'fa-solid fa-hard-drive'; // Default fallback
+        }
+        ?>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <?php foreach ($drives as $d): ?>
+            <?php $drive_icon = get_drive_icon($d->name); ?>
             <a href="<?= site_url('drive/view/' . $d->id) ?>" class="glass-card-hover p-5 block group relative overflow-hidden">
                 <!-- Color Bar Top -->
                 <div class="absolute top-0 left-0 right-0 h-1" style="background-color: <?= $d->color ?? '#3B82F6' ?>"></div>
                 
                 <div class="flex items-start justify-between mb-4">
                     <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style="background-color: <?= ($d->color ?? '#3B82F6') . '15' ?>; color: <?= $d->color ?? '#3B82F6' ?>">
-                        <i class="<?= htmlspecialchars($d->icon ?? 'fa-solid fa-folder') ?> text-xl"></i>
+                        <i class="<?= htmlspecialchars($drive_icon) ?> text-xl"></i>
                     </div>
                     <?php if ($is_admin): ?>
                     <div class="relative" onclick="event.preventDefault();">

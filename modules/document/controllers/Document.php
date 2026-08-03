@@ -237,6 +237,55 @@ class Document extends Controller
         exit;
     }
 
+    public function rename()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input) {
+            $input = $_POST;
+        }
+
+        $doc_id = isset($input['document_id']) ? (int) $input['document_id'] : 0;
+        $new_name = isset($input['new_name']) ? trim($input['new_name']) : '';
+
+        if (empty($new_name)) {
+            echo json_encode(['status' => false, 'message' => 'Nama file tidak boleh kosong.']);
+            return;
+        }
+
+        $doc = $this->mod->get_document_by_id($doc_id);
+        if (!$doc) {
+            echo json_encode(['status' => false, 'message' => 'Dokumen tidak ditemukan.']);
+            return;
+        }
+
+        if (!AuthMiddleware::canAccessDrive($doc->drive_id)) {
+            echo json_encode(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        // Update name
+        $this->mod->update_document($doc_id, [
+            'name' => $new_name,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => Session::get('user_id')
+        ]);
+
+        // Log activity
+        $this->db->query(
+            "INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, ip_address, created_at, status) VALUES (?, 'UPDATE', 'document', ?, ?, ?, NOW(), 1)",
+            [Session::get('user_id'), $doc_id, "Mengubah nama file dari '{$doc->name}' menjadi '{$new_name}'", $_SERVER['REMOTE_ADDR'] ?? '']
+        );
+
+        echo json_encode(['status' => true, 'message' => 'Nama file berhasil diubah.']);
+    }
+
     public function delete()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

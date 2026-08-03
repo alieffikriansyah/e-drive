@@ -9,7 +9,7 @@
             </h1>
             <p class="section-subtitle mt-1">File di sini dapat dipulihkan atau dihapus selamanya</p>
         </div>
-        <?php if (!empty($documents)): ?>
+        <?php if (!empty($documents) || !empty($folders)): ?>
         <button class="btn-secondary text-red-600 hover:bg-red-50 hover:border-red-200" onclick="emptyRecycleBin()">
             <i class="fa-solid fa-dumpster-fire"></i> Kosongkan
         </button>
@@ -31,54 +31,98 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($documents)): ?>
+                    <?php if (empty($documents) && empty($folders)): ?>
                     <tr>
                         <td colspan="6" class="text-center py-16 text-edrive-muted">
                             <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 shadow-inner">
                                 <i class="fa-solid fa-wind text-3xl text-gray-300"></i>
                             </div>
                             <h3 class="text-lg font-bold text-edrive-text">Recycle Bin Kosong</h3>
-                            <p class="mt-1 text-sm">Tidak ada file yang dihapus.</p>
+                            <p class="mt-1 text-sm">Tidak ada file atau folder yang dihapus.</p>
                         </td>
                     </tr>
                     <?php else: ?>
-                        <?php foreach ($documents as $doc): ?>
-                        <tr class="group" id="trash-row-<?= $doc->id ?>">
-                            <td>
-                                <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-                                    <i class="<?= get_file_icon($doc->file_type) ?> text-2xl w-8 text-center grayscale group-hover:grayscale-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-medium text-edrive-text line-through group-hover:no-underline truncate" title="<?= htmlspecialchars($doc->name) ?>">
-                                            <?= htmlspecialchars($doc->name) ?>
-                                        </p>
-                                        <p class="text-[10px] text-edrive-muted uppercase"><?= htmlspecialchars($doc->file_type) ?></p>
+                        <!-- Render Folders -->
+                        <?php if (!empty($folders)): ?>
+                            <?php foreach ($folders as $folder): ?>
+                            <tr class="group bg-orange-50/30" id="trash-folder-row-<?= $folder->id ?>">
+                                <td>
+                                    <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <i class="fa-solid fa-folder text-2xl w-8 text-center grayscale group-hover:grayscale-0 text-yellow-500"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-edrive-text line-through group-hover:no-underline truncate" title="<?= htmlspecialchars($folder->name) ?>">
+                                                <?= htmlspecialchars($folder->name) ?>
+                                            </p>
+                                            <p class="text-[10px] text-edrive-muted uppercase">Folder</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge badge-info bg-gray-100 text-gray-600 border border-gray-200">
-                                    <i class="fa-solid fa-hard-drive mr-1"></i> <?= htmlspecialchars($doc->drive_name) ?>
-                                </span>
-                            </td>
-                            <td class="text-edrive-muted"><?= format_file_size($doc->file_size) ?></td>
-                            <td class="text-edrive-text text-sm"><?= htmlspecialchars($doc->deleted_by_name ?? 'System') ?></td>
-                            <td class="text-red-500 text-sm">
-                                <div class="tooltip" data-tip="<?= formatDate($doc->updated_at) ?>">
-                                    <?= timeAgo($doc->updated_at) ?>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button class="btn-icon bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200" title="Pulihkan (Restore)" onclick="restoreFile(<?= $doc->id ?>)">
-                                        <i class="fa-solid fa-rotate-left"></i>
-                                    </button>
-                                    <button class="btn-icon bg-red-50 text-red-600 hover:bg-red-100 border border-red-200" title="Hapus Permanen" onclick="destroyFile(<?= $doc->id ?>)">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info bg-gray-100 text-gray-600 border border-gray-200">
+                                        <i class="fa-solid fa-hard-drive mr-1"></i> <?= htmlspecialchars($folder->drive_name) ?>
+                                    </span>
+                                </td>
+                                <td class="text-edrive-muted">-</td>
+                                <td class="text-edrive-text text-sm"><?= htmlspecialchars($folder->deleted_by_name ?? 'System') ?></td>
+                                <td class="text-red-500 text-sm">
+                                    <div class="tooltip" data-tip="<?= formatDate($folder->deleted_at) ?>">
+                                        <?= timeAgo($folder->deleted_at) ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="btn-icon bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200" title="Pulihkan (Restore)" onclick="restoreFolder(<?= $folder->id ?>)">
+                                            <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                        <button class="btn-icon bg-red-50 text-red-600 hover:bg-red-100 border border-red-200" title="Hapus Permanen" onclick="destroyFolder(<?= $folder->id ?>)">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <!-- Render Files -->
+                        <?php if (!empty($documents)): ?>
+                            <?php foreach ($documents as $doc): ?>
+                            <tr class="group" id="trash-row-<?= $doc->id ?>">
+                                <td>
+                                    <div class="flex items-center gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                                        <i class="<?= get_file_icon($doc->file_type) ?> text-2xl w-8 text-center grayscale group-hover:grayscale-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-medium text-edrive-text line-through group-hover:no-underline truncate" title="<?= htmlspecialchars($doc->name) ?>">
+                                                <?= htmlspecialchars($doc->name) ?>
+                                            </p>
+                                            <p class="text-[10px] text-edrive-muted uppercase"><?= htmlspecialchars($doc->file_type) ?></p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info bg-gray-100 text-gray-600 border border-gray-200">
+                                        <i class="fa-solid fa-hard-drive mr-1"></i> <?= htmlspecialchars($doc->drive_name) ?>
+                                    </span>
+                                </td>
+                                <td class="text-edrive-muted"><?= format_file_size($doc->file_size) ?></td>
+                                <td class="text-edrive-text text-sm"><?= htmlspecialchars($doc->deleted_by_name ?? 'System') ?></td>
+                                <td class="text-red-500 text-sm">
+                                    <div class="tooltip" data-tip="<?= formatDate($doc->updated_at) ?>">
+                                        <?= timeAgo($doc->updated_at) ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="btn-icon bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200" title="Pulihkan (Restore)" onclick="restoreFile(<?= $doc->id ?>)">
+                                            <i class="fa-solid fa-rotate-left"></i>
+                                        </button>
+                                        <button class="btn-icon bg-red-50 text-red-600 hover:bg-red-100 border border-red-200" title="Hapus Permanen" onclick="destroyFile(<?= $doc->id ?>)">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -114,6 +158,36 @@ async function destroyFile(id) {
             if (document.querySelectorAll('tbody tr').length === 0) location.reload();
         } else {
             showError(data ? data.message : 'Gagal menghapus file');
+        }
+    }
+}
+
+async function restoreFolder(id) {
+    if (await confirmAction('Pulihkan Folder?', 'Folder akan dikembalikan ke lokasi asalnya.', 'info', 'Ya, Pulihkan')) {
+        showLoading('Memulihkan...');
+        const data = await fetchAPI('recycle_bin/restore_folder', { method: 'POST', body: { folder_id: id } });
+        hideLoading();
+        if (data && data.status) {
+            document.getElementById('trash-folder-row-' + id).remove();
+            showSuccess(data.message);
+            if (document.querySelectorAll('tbody tr').length === 0) location.reload();
+        } else {
+            showError(data ? data.message : 'Gagal memulihkan folder');
+        }
+    }
+}
+
+async function destroyFolder(id) {
+    if (await confirmAction('Hapus Permanen?', 'Folder dan seluruh isinya akan dihapus dari server dan tidak dapat dikembalikan lagi! Aksi ini bersifat PERMANEN.', 'error', 'Ya, Hapus Permanen')) {
+        showLoading('Menghapus Permanen...');
+        const data = await fetchAPI('recycle_bin/permanent_delete_folder', { method: 'POST', body: { folder_id: id } });
+        hideLoading();
+        if (data && data.status) {
+            document.getElementById('trash-folder-row-' + id).remove();
+            showSuccess(data.message);
+            if (document.querySelectorAll('tbody tr').length === 0) location.reload();
+        } else {
+            showError(data ? data.message : 'Gagal menghapus folder');
         }
     }
 }

@@ -9,6 +9,10 @@ class MOD extends Model {
     }
     
     public function delete_folder($id) {
-        return $this->db->delete('folders', ['id' => $id]);
+        return $this->db->table('folders')->where('id', $id)->update([
+            'status' => 8,
+            'deleted_at' => date('Y-m-d H:i:s'),
+            'updated_by' => Session::get('user_id')
+        ]);
     }
 }
