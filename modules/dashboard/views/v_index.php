@@ -10,8 +10,14 @@
             <h1 class="text-2xl font-bold text-edrive-text">Halo, <?= htmlspecialchars(Session::get('name')) ?> 👋</h1>
             <p class="text-edrive-muted mt-1">Berikut adalah ringkasan aktivitas dan penyimpanan Anda hari ini.</p>
         </div>
-        <div class="flex gap-3">
-            <a href="<?= site_url('drive') ?>" class="btn-primary">
+        <div class="flex flex-wrap gap-3">
+            <a href="<?= site_url('ai_chat/general') ?>" class="btn-primary !bg-gradient-to-r !from-violet-600 !to-indigo-600 !shadow-violet-500/20">
+                <i class="fa-solid fa-robot"></i> 🤖 AI Assistant
+            </a>
+            <a href="<?= site_url('ai_chat/edrive') ?>" class="btn-primary !bg-gradient-to-r !from-emerald-600 !to-teal-600 !shadow-emerald-500/20">
+                <i class="fa-solid fa-folder-open"></i> 📁 E-Drive Assistant
+            </a>
+            <a href="<?= site_url('drive') ?>" class="btn-secondary">
                 <i class="fa-solid fa-cloud-arrow-up"></i> Upload Baru
             </a>
         </div>

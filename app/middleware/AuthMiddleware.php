@@ -27,13 +27,16 @@ class AuthMiddleware {
         if (($pos = strpos($uri, '?')) !== false) {
             $uri = substr($uri, 0, $pos);
         }
-        $uri = trim($uri, '/');
-        
         $segments = explode('/', $uri);
         $module = !empty($segments[0]) ? $segments[0] : 'dashboard';
 
         $role_id = Session::get('role_id');
         
+        // AI Chat (AI Assistant & E-Drive Assistant) is accessible to ALL logged-in users
+        if ($module === 'ai_chat') {
+            return;
+        }
+
         // Check if module exists in system_menus
         $menu = $CI->db->table('system_menus')->where('url', $module)->row();
         

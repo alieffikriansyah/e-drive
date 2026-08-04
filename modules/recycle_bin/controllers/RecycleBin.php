@@ -174,32 +174,7 @@ class RecycleBin extends Controller {
             return;
         }
 
-        // Helper to recursively delete directory
-        $deleteDir = function($dirPath) use (&$deleteDir) {
-            if (!is_dir($dirPath)) return;
-            if (substr($dirPath, strlen($dirPath) - 1, 1) != '/') $dirPath .= '/';
-            $files = glob($dirPath . '*', GLOB_MARK);
-            foreach ($files as $file) {
-                if (is_dir($file)) {
-                    $deleteDir($file);
-                } else {
-                    @unlink($file);
-                }
-            }
-            @rmdir($dirPath);
-        };
-
-        // Find and delete physical folder
-        $year = date('Y', strtotime($folder->created_at));
-        $physical_dir = STORAGEPATH . 'drives/' . $folder->created_by . '/' . $year . $folder->path;
-        $deleteDir($physical_dir);
-
-        // Delete documents under this folder in DB
-        $docs = $this->db->table('documents')->where('folder_id', $folder_id)->get();
-        foreach ($docs as $doc) {
-            $this->mod->permanent_delete($doc->id);
-        }
-
+        // Safely delete folder, subfolders, and physical files of contained documents
         $this->mod->permanent_delete_folder($folder_id);
 
         $this->db->query(
