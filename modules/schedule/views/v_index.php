@@ -211,6 +211,16 @@
         border-radius: 8px;
         box-shadow: 0 25px 50px rgba(0,0,0,0.4);
     }
+
+    /* Loading Overlay */
+    .loading-spinner {
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 </style>
 
 <div x-data="scheduleApp()" x-init="initCalendar()"
@@ -448,11 +458,11 @@
             </div>
 
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/80 flex justify-end gap-3">
-                <button type="button" @click="closeModal()"
-                    class="px-5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition"
+                <button type="button" @click="closeModal()" :disabled="isLoading"
+                    class="px-5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     x-text="(form.id && !canEditEvent()) ? 'Tutup' : 'Batal'">Batal</button>
-                <button x-show="!form.id || canEditEvent()" type="button" @click="saveEvent()"
-                    class="px-5 py-2 rounded-lg text-sm font-medium bg-edrive-accent hover:bg-blue-600 text-white shadow shadow-blue-500/20 transition flex items-center gap-2">
+                <button x-show="!form.id || canEditEvent()" type="button" @click="saveEvent()" :disabled="isLoading"
+                    class="px-5 py-2 rounded-lg text-sm font-medium bg-edrive-accent hover:bg-blue-600 text-white shadow shadow-blue-500/20 transition flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-save"></i> Simpan
                 </button>
             </div>
@@ -463,16 +473,32 @@
     <div x-show="lightboxUrl" x-transition.opacity class="img-lightbox" @click="closeLightbox()" style="display: none;">
         <img :src="lightboxUrl" alt="Preview">
     </div>
+
+    <!-- Global Loading Overlay: muncul saat proses simpan/hapus berjalan, memblokir semua klik. Auto timeout 2 menit -->
+    <div x-show="isLoading" style="display: none;" x-transition.opacity
+        class="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
+        @click.stop @mousedown.stop @wheel.stop.prevent>
+        <div class="bg-white rounded-2xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl">
+            <svg class="loading-spinner h-10 w-10 text-edrive-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <p class="text-slate-700 font-medium text-sm">Menyimpan agenda...</p>
+            <p class="text-slate-400 text-xs">Mohon tunggu, jangan tutup halaman ini</p>
+        </div>
+    </div>
 </div>
 
 <script>
     function scheduleApp() {
         const CURRENT_USER_ID = <?= (int) Session::get('user_id') ?>;
         const IS_ADMIN = <?= in_array(Session::get('role_id'), [1, 2]) ? 'true' : 'false' ?>;
+        const LOADING_TIMEOUT_MS = 120000; // Batas maksimal loading: 2 menit
 
         return {
             calendar: null,
             isModalOpen: false,
+            isLoading: false, // Kontrol overlay loading global (blokir semua klik)
             searchQuery: '',
             filters: {
                 visibility: ['private', 'public']
@@ -618,6 +644,8 @@
             },
 
             closeModal() {
+                // Cegah modal ditutup saat proses simpan/hapus sedang berjalan
+                if (this.isLoading) return;
                 this.isModalOpen = false;
                 this.lightboxUrl = null;
             },
@@ -650,25 +678,49 @@
                     formData.append(key, this.form[key]);
                 }
 
+                // Tampilkan loading overlay & blokir seluruh interaksi sebelum request dikirim.
+                // Dibatasi maksimal 2 menit menggunakan AbortController — jika lewat batas,
+                // seluruh proses (termasuk upload gambar) otomatis dibatalkan.
+                this.isLoading = true;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), LOADING_TIMEOUT_MS);
+
                 try {
-                    let res = await fetch('<?= site_url('schedule/api_save') ?>', { method: 'POST', body: formData });
+                    let res = await fetch('<?= site_url('schedule/api_save') ?>', {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                    });
                     let json = await res.json();
 
                     if (json.status) {
-                        // Upload pending images if any
+                        // Upload pending images if any (masih dalam batas waktu yang sama)
                         let scheduleId = json.id;
                         if (this.pendingFiles.length > 0 && scheduleId) {
-                            await this.uploadPendingImages(scheduleId);
+                            await this.uploadPendingImages(scheduleId, controller.signal);
                         }
+
+                        clearTimeout(timeoutId);
+                        this.isLoading = false;
 
                         Swal.fire({ icon: 'success', title: 'Berhasil', text: json.message, timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
                         this.closeModal();
                         this.calendar.refetchEvents();
                     } else {
+                        clearTimeout(timeoutId);
+                        this.isLoading = false;
                         Swal.fire({ icon: 'error', title: 'Gagal', text: json.message, background: '#1e293b', color: '#fff' });
                     }
                 } catch (e) {
+                    clearTimeout(timeoutId);
+                    this.isLoading = false;
                     console.error(e);
+
+                    if (e.name === 'AbortError') {
+                        Swal.fire({ icon: 'error', title: 'Waktu Habis', text: 'Proses penyimpanan melebihi batas waktu 2 menit. Silakan periksa koneksi Anda dan coba lagi.', background: '#1e293b', color: '#fff' });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan saat menyimpan agenda.', background: '#1e293b', color: '#fff' });
+                    }
                 }
             },
 
@@ -718,9 +770,20 @@
                     let formData = new FormData();
                     formData.append('id', this.form.id);
 
+                    this.isLoading = true;
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), LOADING_TIMEOUT_MS);
+
                     try {
-                        let res = await fetch('<?= site_url('schedule/api_delete') ?>', { method: 'POST', body: formData });
+                        let res = await fetch('<?= site_url('schedule/api_delete') ?>', {
+                            method: 'POST',
+                            body: formData,
+                            signal: controller.signal
+                        });
                         let json = await res.json();
+
+                        clearTimeout(timeoutId);
+                        this.isLoading = false;
 
                         if (json.status) {
                             Swal.fire({ icon: 'success', title: 'Terhapus', text: json.message, timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
@@ -729,7 +792,13 @@
                         } else {
                             Swal.fire({ icon: 'error', title: 'Gagal', text: json.message, background: '#1e293b', color: '#fff' });
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        clearTimeout(timeoutId);
+                        this.isLoading = false;
+                        if (e.name === 'AbortError') {
+                            Swal.fire({ icon: 'error', title: 'Waktu Habis', text: 'Proses penghapusan melebihi batas waktu 2 menit. Silakan coba lagi.', background: '#1e293b', color: '#fff' });
+                        }
+                    }
                 }
             },
 
@@ -847,7 +916,7 @@
                 }
             },
 
-            async uploadPendingImages(scheduleId) {
+            async uploadPendingImages(scheduleId, signal) {
                 this.isUploading = true;
                 let failed = 0;
                 for (let i = 0; i < this.pendingFiles.length; i++) {
@@ -856,13 +925,23 @@
                         let formData = new FormData();
                         formData.append('schedule_id', scheduleId);
                         formData.append('file', pf.file);
-                        let res = await fetch('<?= site_url('schedule/api_upload_image') ?>', { method: 'POST', body: formData });
+                        let res = await fetch('<?= site_url('schedule/api_upload_image') ?>', {
+                            method: 'POST',
+                            body: formData,
+                            signal: signal
+                        });
                         let json = await res.json();
                         if (!json.status) {
                             failed++;
                             console.error('Upload failed for', pf.file.name, json.message);
                         }
                     } catch (e) {
+                        // Jika dibatalkan karena timeout 2 menit, hentikan proses upload
+                        // dan lempar error agar ditangani sebagai timeout di saveEvent()
+                        if (e.name === 'AbortError') {
+                            this.isUploading = false;
+                            throw e;
+                        }
                         failed++;
                         console.error('Upload error:', e);
                     }
