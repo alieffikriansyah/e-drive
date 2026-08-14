@@ -54,4 +54,12 @@ class MOD extends Model {
         }
         return $this->db->order_by('created_at', 'DESC')->result();
     }
+
+    public function get_all_folders_by_drive($drive_id) {
+        return $this->db->table('folders')
+                 ->where('drive_id', $drive_id)
+                 ->where('status', 1)
+                 ->order_by('name', 'ASC')
+                 ->result();
+    }
 }

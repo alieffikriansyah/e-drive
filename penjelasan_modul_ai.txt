@@ -1,0 +1,87 @@
+PENJELASAN MODUL AI & ASSISTANT E-DRIVE
+========================================
+
+Dokumen ini menjelaskan struktur, alur, dan logika di balik 5 modul AI yang ada di dalam aplikasi E-Drive Anda.
+
+--------------------------------------------------
+BAGIAN 1: GAMBARAN UMUM 5 MODUL AI
+--------------------------------------------------
+Aplikasi E-Drive memisahkan fitur AI menjadi 5 modul berbeda agar kode lebih rapi dan fokus pada fungsinya masing-masing:
+
+1. ai_api (Modul API Internal):
+   Modul ini bertugas menyediakan data real-time (langsung dari database) yang nantinya dibutuhkan oleh AI atau halaman antarmuka frontend. 
+   - Fungsi utama: Menghitung total dokumen, ruang penyimpanan, daftar jadwal/agenda, daftar pengguna (roles), log aktivitas, dan melakukan pencarian dokumen. 
+   - Modul ini memiliki keamanan berupa pengecekan Header 'X-AI-API-KEY' atau mengecek sesi login pengguna aktif agar data tidak bisa diakses sembarangan.
+
+2. ai_dashboard (Modul Analitik & Monitoring):
+   Modul ini khusus menampilkan visualisasi statistik untuk admin.
+   - Fungsi utama: Menghitung seberapa banyak interaksi AI yang digunakan (token usage), jumlah pesan, grafik harian, melihat feedback (jempol ke atas/bawah) dari user, dan mengawasi jumlah dokumen referensi yang sudah dimasukkan ke Knowledge Base AI.
+
+3. ai_document (Modul Knowledge Base):
+   Modul ini adalah tempat di mana administrator mengunggah dokumen referensi (PDF, Word, dll) yang akan dipelajari oleh AI.
+   - Fungsi utama: Menerima file upload, menyimpannya di folder penyimpanan E-Drive, mencatat informasinya di database, lalu secara konseptual file tersebut akan diubah menjadi format vektor (embedding) agar bisa dicari oleh AI saat ditanya oleh user.
+
+4. ai_setting (Modul Konfigurasi):
+   Panel khusus admin untuk mengatur cara kerja dan konfigurasi koneksi mesin AI.
+   - Fungsi utama: Menyimpan API Key (seperti OpenAI, Groq), mengatur alamat URL server AI (Flowise, Ollama), mengubah prompt dasar (kepribadian) AI, menghidupkan/mematikan fitur tertentu, dan mengetes koneksi ke server (Pinging) untuk memastikan server AI siap melayani.
+
+5. ai_chat (Modul Inti - Chat Assistant):
+   Ini adalah antarmuka utama yang berinteraksi langsung dengan pengguna. Di sinilah otak AI bekerja memproses pesan dan memutuskan jawaban.
+   - Terdapat 2 asisten berbeda di sini: "General AI Assistant" (Asisten Umum) dan "E-Drive Assistant" (Asisten Spesialis Sistem).
+
+
+--------------------------------------------------
+BAGIAN 2: LOGIKA "AI ASSISTANT" VS "E-DRIVE ASSISTANT"
+--------------------------------------------------
+Kode Anda (pada AiChat.php) membedakan dua asisten berdasarkan parameternya: `type = 'general'` dan `type = 'edrive'`. 
+
+1. AI Assistant (General):
+   - Bertindak layaknya ChatGPT biasa pada umumnya. 
+   - Logika kerjanya: Ia hanya menerima instruksi awal (System Prompt) standar lalu menjawab berdasarkan pengetahuan umumnya saja (misal untuk menerjemahkan, drafting teks, ide kreatif). 
+   - Ia TIDAK disuntikkan data internal sistem Anda.
+
+2. E-Drive Assistant (Spesialis):
+   - Asisten ini didesain agar "tahu" dan mengenali isi data aplikasi E-Drive Anda secara live.
+   - BAGAIMANA LOGIKA & ALURNYA SEHINGGA BISA BEGITU? 
+     Rahasia utamanya ada di teknik **Context Injection** pada kode `_get_ai_response()` di `AiChat.php`.
+     Ketika user bertanya ke E-Drive Assistant, kode tidak langsung melempar teks ke AI. Secara diam-diam (di belakang layar) kode PHP akan melakukan Query ke Database MySQL Anda untuk:
+     a. Mengambil seluruh daftar hak akses (Role) aktif di sistem.
+     b. Menghitung jumlah total dokumen dan total byte penyimpanan saat itu juga.
+     c. Merekap kapasitas file yang ada di tiap-tiap Drive, lalu mengurutkannya dari drive yang paling penuh hingga yang kosong.
+     
+     Lalu, teks dari data live tersebut dirangkai dan DISISIPKAN ke dalam System Prompt (sebuah instruksi yang dikirim ke mesin AI tanpa terlihat oleh user). 
+     
+     Tujuannya apa? Karena model AI (seperti Llama/Qwen) tidak bisa melakukan Query SQL secara mandiri ke database Anda. Jadi, kodingan Andalah yang bertugas "mencarikan data" dari MySQL, mengubahnya jadi format teks yang mudah dibaca, lalu memberikannya ke AI layaknya sebuah "buku contekan". Dengan buku contekan berisi data live tersebut, barulah AI merangkai bahasanya untuk membalas pengguna seolah-olah dia terhubung langsung ke hardisk E-Drive.
+
+
+--------------------------------------------------
+BAGIAN 3: ALUR & MEKANISME "WATERFALL" PADA KODE AI
+--------------------------------------------------
+Fungsi `_get_ai_response()` pada `AiChat.php` merupakan inti dari penentuan logika otak (LLM) mana yang akan membalas pengguna. Kode Anda menggunakan teknik "Waterfall Fallback" (Mekanisme Bertingkat), artinya sistem akan mencoba menggunakan mesin yang paling canggih, namun jika gagal/error, ia akan turun otomatis ke cadangan di bawahnya.
+
+Berikut alurnya (Langkah 1 s/d 4) secara berurutan:
+
+Langkah 1: Cloud LLM (OpenAI / Groq)
+- Sistem membaca konfigurasi. Jika ada `cloud_api_key`, sistem pertama kali mencoba mengirim pertanyaan ke server luar (Cloud) karena modelnya paling cerdas.
+- Jika koneksi berhasil, AI Cloud membalas, dan proses selesai.
+- Jika API Key salah, internet mati, atau kuota habis, sistem lanjut ke Langkah 2.
+
+Langkah 2: Flowise (AI Workflow Terstruktur)
+- Jika langkah 1 gagal atau tidak disetting, sistem mencoba menembak URL Flowise (biasanya di localhost:3000). Flowise ini khusus didesain jika aplikasi butuh membaca ratusan dokumen PDF (Knowledge Base) untuk mencari jawaban (Retrieval-Augmented Generation / RAG).
+- Jika server Flowise belum di-start atau error, sistem lanjut ke Langkah 3.
+
+Langkah 3: Ollama (Model AI Lokal Offline)
+- Jika langkah 2 gagal, sistem mencoba menembak Ollama (localhost:11434). Ollama ini sangat aman karena berjalan di PC Anda sendiri (Offline AI) menggunakan model ringan seperti `qwen` atau `llama3`.
+- Jika server Ollama juga mati (belum di-run), sistem lanjut ke Langkah 4.
+
+Langkah 4: Smart Local Fallback (Penyelamat Terakhir - Hardcoded)
+- Ini memanggil fungsi `_generate_smart_fallback()`. Jika tidak ada satupun koneksi AI yang hidup (baik cloud maupun lokal), sistem TIDAK akan menampilkan error kepada user. 
+- Sebagai jaring pengaman, kode PHP Anda akan melakukan pencocokan kata kunci (keyword matching) sederhana dari teks user:
+  - Misal: Jika user mengetik kata "17 agustus", sistem membalas dengan teks draf undangan yang sudah di-*hardcode* di dalam kode.
+  - Misal: Jika user mengetik "folder" / "share", sistem membalas teks panduan (SOP) cara pemakaian.
+  - Misal: Jika user mengetik "jadwal", PHP akan query jadwal ke DB lalu mencetaknya.
+- Tujuannya: Agar pengguna awam tetap merasa ada asisten yang membantu dan tidak menemui pesan *Error 500* walaupun server kecerdasan buatan sedang tumbang.
+
+
+KESIMPULAN:
+Aplikasi ini memiliki arsitektur modul AI yang solid. Asisten General bertugas sebagai alat bantu sehari-hari, sedangkan Asisten E-Drive bertugas sebagai pemandu sistem berbekal "contekan data" yang disuntikkan secara dinamis dari database oleh PHP. Diperkuat dengan sistem jaring pengaman bertingkat (Cloud -> Flowise -> Ollama -> Fallback) yang memastikan chat user akan selalu mendapat balasan dalam kondisi server apapun.

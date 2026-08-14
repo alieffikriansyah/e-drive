@@ -4,6 +4,10 @@ class MOD extends Model {
         return $this->db->insert('documents', $data);
     }
     
+    public function insert_folder($data) {
+        return $this->db->table('folders')->insert($data);
+    }
+    
     public function insert_version($data) {
         return $this->db->insert('document_versions', $data);
     }

@@ -104,3 +104,18 @@ SUCCESS SAVING: C:\xampp\htdocs\e-drive\storage\drives/1/2026/apasaj/LAPORAN PEK
 2026-07-31 03:23:26
 {"key":"4_1785478883","status":4,"actions":[{"type":0,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI0XzE3ODU0Nzg4ODMiLCJzdGF0dXMiOjQsImFjdGlvbnMiOlt7InR5cGUiOjAsInVzZXJpZCI6IjEifV0sImlhdCI6MTc4NTQ2MTAwNiwiZXhwIjoxNzg1NDYxMzA2fQ.RbizYYWzrtHwXKm4gv5AmailMV8pHHiK7CnqM6uJLAA"}
 
+2026-08-12 11:05:59
+{"key":"5_1786525549","status":1,"users":["1"],"actions":[{"type":1,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjEsInVzZXJzIjpbIjEiXSwiYWN0aW9ucyI6W3sidHlwZSI6MSwidXNlcmlkIjoiMSJ9XSwiaWF0IjoxNzg2NTI1NTU5LCJleHAiOjE3ODY1MjU4NTl9.DhWSl8YkIc0oAWJasuIky6E2UvHZf9SJYTI0PWw56SE"}
+
+2026-08-12 11:06:08
+{"key":"5_1786525549","status":6,"url":"http://localhost:8080/cache/files/data/5_1786525549_3313/output.docx/output.docx?md5=2czbedTz2MKsTbpz9miKdw&expires=1786526469&shardkey=5_1786525549&filename=output.docx","changesurl":"http://localhost:8080/cache/files/data/5_1786525549_3313/changes.zip/changes.zip?md5=buGpHtfgwHNWkQIikRfO3Q&expires=1786526469&shardkey=5_1786525549&filename=changes.zip","history":{"serverVersion":"9.4.0","changes":[{"documentSha256":"e59ed95058ddb1df71b92e3944450e5d56c52984c41c49095a82f78ff0658f7a","created":"2026-08-12 09:06:06","user":{"id":"1","name":"User"}}]},"users":["1"],"actions":[{"type":2,"userid":"1"}],"lastsave":"2026-08-12T09:06:06.000Z","forcesavetype":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjYsInVybCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9jYWNoZS9maWxlcy9kYXRhLzVfMTc4NjUyNTU0OV8zMzEzL291dHB1dC5kb2N4L291dHB1dC5kb2N4P21kNT0yY3piZWRUejJNS3NUYnB6OW1pS2R3JmV4cGlyZXM9MTc4NjUyNjQ2OSZzaGFyZGtleT01XzE3ODY1MjU1NDkmZmlsZW5hbWU9b3V0cHV0LmRvY3giLCJjaGFuZ2VzdXJsIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL2NhY2hlL2ZpbGVzL2RhdGEvNV8xNzg2NTI1NTQ5XzMzMTMvY2hhbmdlcy56aXAvY2hhbmdlcy56aXA_bWQ1PWJ1R3BIdGZnd0hOV2tRSWlrUmZPM1EmZXhwaXJlcz0xNzg2NTI2NDY5JnNoYXJka2V5PTVfMTc4NjUyNTU0OSZmaWxlbmFtZT1jaGFuZ2VzLnppcCIsImhpc3RvcnkiOnsic2VydmVyVmVyc2lvbiI6IjkuNC4wIiwiY2hhbmdlcyI6W3siZG9jdW1lbnRTaGEyNTYiOiJlNTllZDk1MDU4ZGRiMWRmNzFiOTJlMzk0NDQ1MGU1ZDU2YzUyOTg0YzQxYzQ5MDk1YTgyZjc4ZmYwNjU4ZjdhIiwiY3JlYXRlZCI6IjIwMjYtMDgtMTIgMDk6MDY6MDYiLCJ1c2VyIjp7ImlkIjoiMSIsIm5hbWUiOiJVc2VyIn19XX0sInVzZXJzIjpbIjEiXSwiYWN0aW9ucyI6W3sidHlwZSI6MiwidXNlcmlkIjoiMSJ9XSwibGFzdHNhdmUiOiIyMDI2LTA4LTEyVDA5OjA2OjA2LjAwMFoiLCJmb3JjZXNhdmV0eXBlIjoxLCJmaWxldHlwZSI6ImRvY3giLCJpYXQiOjE3ODY1MjU1NjgsImV4cCI6MTc4NjUyNTg2OH0.8rqNVuwlJZzoFNwG8moSRAzTEhfI_BbM7ySvnga_CBo","filetype":"docx"}
+
+2026-08-12 11:06:15
+{"key":"5_1786525549","status":1,"users":["1"],"actions":[{"type":1,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjEsInVzZXJzIjpbIjEiXSwiYWN0aW9ucyI6W3sidHlwZSI6MSwidXNlcmlkIjoiMSJ9XSwiaWF0IjoxNzg2NTI1NTc1LCJleHAiOjE3ODY1MjU4NzV9.0u_ZdiMwTg_r3_UsZKoWMTTmvJ5oIUeNFLcaYW4iT50"}
+
+2026-08-12 11:07:24
+{"key":"5_1786525549","status":1,"users":["1"],"actions":[{"type":1,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjEsInVzZXJzIjpbIjEiXSwiYWN0aW9ucyI6W3sidHlwZSI6MSwidXNlcmlkIjoiMSJ9XSwiaWF0IjoxNzg2NTI1NjQ0LCJleHAiOjE3ODY1MjU5NDR9.WVYdG7o4JrsKWn-6XXL0m_s5tJajBWegAUqXAT4YNZ8"}
+
+2026-08-12 11:08:12
+{"key":"5_1786525549","status":4,"actions":[{"type":0,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjQsImFjdGlvbnMiOlt7InR5cGUiOjAsInVzZXJpZCI6IjEifV0sImlhdCI6MTc4NjUyNTY5MiwiZXhwIjoxNzg2NTI1OTkyfQ.HKAuOReRom37glcoLtXNST5CgbTxvE72zXVIAaQop8c"}
+

@@ -4,11 +4,22 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<!-- AlpineJS -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-<div class="flex h-[calc(100vh-8.5rem)] bg-white rounded-2xl border border-edrive-border overflow-hidden shadow-sm">
+<div x-data="{ sidebarOpen: false }" class="flex h-[calc(100vh-8.5rem)] bg-white rounded-2xl border border-edrive-border overflow-hidden shadow-sm relative">
 
     <!-- ===== LEFT SIDEBAR: CONVERSATION HISTORY ===== -->
-    <div class="w-80 border-r border-edrive-border bg-slate-50/70 flex flex-col shrink-0">
+    <!-- Mobile Sidebar Backdrop -->
+    <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false"
+         class="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-40" style="display: none;"></div>
+
+    <div class="w-80 border-r border-edrive-border bg-slate-50/70 flex flex-col shrink-0
+                fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+                transition-transform duration-300 ease-in-out
+                h-full lg:h-auto shadow-2xl lg:shadow-none
+                -translate-x-full lg:translate-x-0"
+         :class="{ '!translate-x-0': sidebarOpen }">
         
         <!-- Header & New Chat Button -->
         <div class="p-4 border-b border-edrive-border space-y-3">
@@ -36,7 +47,7 @@
                 <?php foreach ($conversations as $c): ?>
                     <?php $isActive = ($c->id == $active_conv_id); ?>
                     <div class="group relative flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all text-sm <?= $isActive ? 'bg-white text-edrive-accent font-semibold shadow-sm border border-slate-200' : 'text-edrive-text hover:bg-slate-200/50' ?>"
-                         onclick="selectConversation(<?= $c->id ?>)">
+                         onclick="selectConversation(<?= $c->id ?>)" @click="sidebarOpen = false">
                         
                         <div class="flex items-center gap-2.5 truncate flex-1 pr-6">
                             <i class="fa-regular fa-message text-xs <?= $isActive ? 'text-edrive-accent' : 'text-edrive-muted' ?>"></i>
@@ -75,19 +86,23 @@
     </div>
 
     <!-- ===== RIGHT MAIN PANEL: CHAT INTERFACE ===== -->
-    <div class="flex-1 flex flex-col bg-white">
+    <div class="flex-1 flex flex-col bg-white min-w-0">
 
         <!-- Active Chat Header -->
-        <div class="h-14 border-b border-edrive-border px-6 flex items-center justify-between shrink-0 bg-white">
-            <div class="flex items-center gap-3">
+        <div class="h-14 border-b border-edrive-border px-4 md:px-6 flex items-center justify-between shrink-0 bg-white">
+            <div class="flex items-center gap-2 md:gap-3 min-w-0">
+                <!-- Mobile sidebar toggle -->
+                <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 -ml-1 rounded-lg text-edrive-muted hover:text-edrive-text hover:bg-slate-100 transition-colors shrink-0">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <div class="w-8 h-8 rounded-lg <?= $assistant_type === 'general' ? 'bg-violet-100 text-violet-600' : 'bg-emerald-100 text-emerald-600' ?> flex items-center justify-center font-bold">
                     <i class="<?= $assistant_type === 'general' ? 'fa-solid fa-robot' : 'fa-solid fa-folder-open' ?>"></i>
                 </div>
-                <div>
-                    <h3 class="font-bold text-edrive-text text-sm" id="active-chat-title">
+                <div class="min-w-0">
+                    <h3 class="font-bold text-edrive-text text-sm truncate" id="active-chat-title">
                         <?= $active_conv ? htmlspecialchars($active_conv->title) : 'Percakapan Baru' ?>
                     </h3>
-                    <p class="text-[11px] text-edrive-muted">
+                    <p class="text-[11px] text-edrive-muted truncate hidden sm:block">
                         <?= $assistant_type === 'general' ? 'Ollama (Qwen3) / General Knowledge' : 'E-Drive Assistant + RAG & Business Tools' ?>
                     </p>
                 </div>
@@ -102,7 +117,7 @@
         </div>
 
         <!-- Message Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6" id="message-container">
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6" id="message-container">
             <?php if (empty($messages)): ?>
                 <!-- Empty State Suggestion Box -->
                 <div class="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto py-12">
@@ -154,7 +169,7 @@
                             </div>
                         <?php endif; ?>
 
-                        <div class="max-w-[80%] space-y-1">
+                        <div class="max-w-[92%] md:max-w-[80%] space-y-1">
                             <div class="p-4 rounded-2xl text-sm leading-relaxed <?= $m->role === 'user' ? 'bg-edrive-accent text-white rounded-br-none shadow-sm' : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none markdown-body' ?>">
                                 <?php if ($m->role === 'user'): ?>
                                     <?= nl2br(htmlspecialchars($m->content)) ?>
@@ -195,7 +210,7 @@
         </div>
 
         <!-- Input Area -->
-        <div class="p-4 border-t border-edrive-border bg-white">
+        <div class="p-3 md:p-4 border-t border-edrive-border bg-white">
             <form id="chatForm" onsubmit="submitChat(event)" class="relative flex items-center">
                 <textarea id="userInput" 
                           rows="1" 
@@ -241,6 +256,12 @@ function scrollToBottom() {
 }
 
 function handleKeyDown(e) {
+    // Pada mobile (lebar layar < 768px), biarkan tombol Enter (tanpa Shift) membuat baris baru.
+    // Karena keyboard HP tidak memiliki kombinasi Shift+Enter yang praktis.
+    if (window.innerWidth < 768) {
+        return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         submitChat(e);
@@ -320,13 +341,13 @@ function appendUserMessage(text) {
         container.innerHTML = '';
     }
     const userHtml = `
-        <div class="flex gap-4 justify-end">
-            <div class="max-w-[80%] space-y-1">
+        <div class="flex gap-3 md:gap-4 justify-end">
+            <div class="max-w-[92%] md:max-w-[80%] space-y-1">
                 <div class="p-4 rounded-2xl text-sm leading-relaxed bg-edrive-accent text-white rounded-br-none shadow-sm">
                     ${escapeHtml(text).replace(/\n/g, '<br>')}
                 </div>
             </div>
-            <div class="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
+            <div class="w-7 h-7 md:w-8 md:h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm hidden sm:flex">
                 ME
             </div>
         </div>
@@ -341,11 +362,11 @@ function appendAssistantMessage(rawText, responseTime = null, msgId = null) {
     const bgClass = assistantType === 'general' ? 'bg-violet-600' : 'bg-emerald-600';
 
     const aiHtml = `
-        <div class="flex gap-4 justify-start">
-            <div class="w-8 h-8 rounded-xl ${bgClass} text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
+        <div class="flex gap-3 md:gap-4 justify-start">
+            <div class="w-7 h-7 md:w-8 md:h-8 rounded-xl ${bgClass} text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
                 <i class="fa-solid ${iconClass}"></i>
             </div>
-            <div class="max-w-[80%] space-y-1">
+            <div class="max-w-[92%] md:max-w-[80%] space-y-1">
                 <div class="p-4 rounded-2xl text-sm leading-relaxed bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none markdown-body">
                     ${parsedText}
                 </div>
@@ -363,8 +384,8 @@ function appendTypingIndicator() {
     const bgClass = assistantType === 'general' ? 'bg-violet-600' : 'bg-emerald-600';
 
     const typingHtml = `
-        <div id="${id}" class="flex gap-4 justify-start items-center">
-            <div class="w-8 h-8 rounded-xl ${bgClass} text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm animate-pulse">
+        <div id="${id}" class="flex gap-3 md:gap-4 justify-start items-center">
+            <div class="w-7 h-7 md:w-8 md:h-8 rounded-xl ${bgClass} text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm animate-pulse">
                 <i class="fa-solid fa-spinner fa-spin"></i>
             </div>
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl rounded-bl-none text-slate-400 text-xs flex items-center gap-1">

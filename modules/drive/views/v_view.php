@@ -162,7 +162,7 @@ if (!function_exists('get_drive_icon')) {
                                 <th>Ukuran</th>
                                 <th>Diunggah Oleh</th>
                                 <th>Tanggal</th>
-                                <th class="w-48 pr-6 text-right">Aksi</th>
+                                <th class="w-[300px] pr-6 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -207,7 +207,7 @@ if (!function_exists('get_drive_icon')) {
                                             </div>
                                         </td>
                                         <td class="pr-4 text-right">
-                                            <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div class="flex items-center justify-end gap-1 transition-opacity">
                                                 <button class="w-8 h-8 rounded hover:bg-gray-100 text-blue-600 flex items-center justify-center transition tooltip" data-tip="Preview" onclick="previewFile(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>', '<?= htmlspecialchars(addslashes($doc->file_path)) ?>')">
                                                     <i class="fa-solid fa-eye text-[13px]"></i>
                                                 </button>
@@ -215,6 +215,11 @@ if (!function_exists('get_drive_icon')) {
                                                 <a href="<?= base_url('onlyoffice/edit/' . $doc->id) ?>" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded hover:bg-orange-50 text-orange-500 flex items-center justify-center transition tooltip" data-tip="Edit di ONLYOFFICE">
                                                     <i class="fa-solid fa-pen-to-square text-[13px]"></i>
                                                 </a>
+                                                <?php endif; ?>
+                                                <?php if (in_array(strtolower($doc->file_type), ['zip', 'rar'])): ?>
+                                                <button class="w-8 h-8 rounded hover:bg-amber-50 text-amber-600 flex items-center justify-center transition tooltip" data-tip="Ekstrak Arsip" onclick="extractArchive(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>')">
+                                                    <i class="fa-solid fa-file-zipper text-[13px]"></i>
+                                                </button>
                                                 <?php endif; ?>
                                                 <button class="w-8 h-8 rounded hover:bg-blue-50 text-blue-500 flex items-center justify-center transition tooltip" data-tip="Rename" onclick="renameFile(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>')">
                                                     <i class="fa-solid fa-i-cursor text-[13px]"></i>
@@ -227,6 +232,9 @@ if (!function_exists('get_drive_icon')) {
                                                 </button>
                                                 <button class="w-8 h-8 rounded hover:bg-gray-100 text-gray-600 flex items-center justify-center transition tooltip" data-tip="Versions" onclick="showVersions(<?= $doc->id ?>)">
                                                     <i class="fa-solid fa-code-commit text-[13px]"></i>
+                                                </button>
+                                                <button class="w-8 h-8 rounded hover:bg-teal-50 text-teal-600 flex items-center justify-center transition tooltip" data-tip="Move" onclick="moveFile(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>')">
+                                                    <i class="fa-solid fa-folder-tree text-[13px]"></i>
                                                 </button>
                                                 <button class="w-8 h-8 rounded hover:bg-red-50 text-red-500 flex items-center justify-center transition tooltip" data-tip="Hapus" onclick="deleteFile(<?= $doc->id ?>)">
                                                     <i class="fa-solid fa-trash text-[13px]"></i>
@@ -398,6 +406,139 @@ if (!function_exists('get_drive_icon')) {
             if (menu.id !== id) menu.classList.add('hidden');
         });
         document.getElementById(id).classList.toggle('hidden');
+    }
+
+    // --- Extract Archive ---
+    function extractArchive(docId, fileName) {
+        if (!confirm(`Apakah Anda yakin ingin mengekstrak arsip "${fileName}" menjadi folder?\n\nSemua file di dalam arsip akan diekstrak ke folder baru.`)) {
+            return;
+        }
+
+        // Show loading overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'extract-overlay';
+        overlay.className = 'fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center';
+        overlay.innerHTML = `
+            <div class="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm mx-4">
+                <i class="fa-solid fa-file-zipper text-amber-500 text-5xl mb-4 animate-bounce"></i>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Mengekstrak Arsip...</h3>
+                <p class="text-sm text-gray-500">Mohon tunggu, sedang mengekstrak file dari arsip <strong>${fileName}</strong></p>
+                <div class="mt-4 w-full bg-gray-100 rounded-full h-2">
+                    <div class="bg-amber-500 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const formData = new FormData();
+        formData.append('document_id', docId);
+
+        fetch(BASE_URL + 'document/extract/' + docId, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': CSRF_TOKEN
+            },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+            document.getElementById('extract-overlay')?.remove();
+            if (res.status) {
+                alert('✅ ' + res.message);
+                location.reload();
+            } else {
+                alert('❌ ' + (res.message || 'Gagal mengekstrak arsip.'));
+            }
+        })
+        .catch(err => {
+            document.getElementById('extract-overlay')?.remove();
+            alert('❌ Terjadi kesalahan saat mengekstrak arsip.');
+            console.error(err);
+        });
+    }
+    
+    // --- Move File ---
+    function moveFile(docId, fileName) {
+        document.getElementById('move-document-id').value = docId;
+        document.getElementById('move-file-name').innerText = fileName;
+        
+        const driveId = document.getElementById('move-current-drive-id').value;
+        const select = document.getElementById('move-target-folder');
+        
+        select.innerHTML = '<option value="">Memuat folder...</option>';
+        select.disabled = true;
+
+        fetch(BASE_URL + 'drive/get_all_folders/' + driveId)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status) {
+                    select.innerHTML = '<option value="">[ Root Drive ]</option>';
+                    data.folders.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f.id;
+                        opt.textContent = f.path;
+                        select.appendChild(opt);
+                    });
+                    select.disabled = false;
+                } else {
+                    select.innerHTML = '<option value="">Gagal memuat folder</option>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                select.innerHTML = '<option value="">Gagal memuat folder</option>';
+            });
+
+        const modal = document.getElementById('move-modal');
+        const modalContent = document.getElementById('move-modal-content');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeMoveModal() {
+        const modal = document.getElementById('move-modal');
+        const modalContent = document.getElementById('move-modal-content');
+        modalContent.classList.remove('scale-100', 'opacity-100');
+        modalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function submitMoveFile(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btn-submit-move');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memindahkan...';
+        btn.disabled = true;
+        
+        const formData = new FormData(document.getElementById('move-form'));
+        
+        fetch(BASE_URL + 'document/move', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                location.reload();
+            } else {
+                alert('❌ ' + data.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('❌ Terjadi kesalahan sistem.');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
     }
 
     // --- Actions ---
@@ -716,6 +857,52 @@ if (!function_exists('get_drive_icon')) {
     <button class="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600" onclick="triggerDeleteFolder()">
         <i class="fa-solid fa-trash w-4"></i> Hapus
     </button>
+</div>
+
+<!-- Move File Modal -->
+<div id="move-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm transition-all duration-300">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="move-modal-content">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-folder-tree text-blue-500"></i> Pindahkan File
+            </h3>
+            <button onclick="closeMoveModal()" class="text-gray-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div class="mb-5 p-3 bg-blue-50 text-blue-800 rounded-lg border border-blue-100 flex gap-3 text-sm">
+                <i class="fa-solid fa-circle-info mt-0.5"></i>
+                <p>Pilih folder tujuan untuk memindahkan <strong id="move-file-name" class="break-all font-medium"></strong></p>
+            </div>
+            
+            <form id="move-form" onsubmit="submitMoveFile(event)">
+                <input type="hidden" id="move-document-id" name="document_id">
+                <input type="hidden" id="move-current-drive-id" value="<?= $drive->id ?>">
+                
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Folder Tujuan</label>
+                    <div class="relative">
+                        <select id="move-target-folder" name="target_folder_id" class="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-gray-50 text-gray-700 font-medium cursor-pointer" required>
+                            <option value="">Memuat folder...</option>
+                        </select>
+                        <i class="fa-solid fa-folder-open absolute left-3.5 top-3.5 text-gray-400"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-gray-400 text-sm pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeMoveModal()" class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-submit-move" class="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm shadow-blue-200 flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-angles-right"></i> Pindahkan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Preview Modal -->

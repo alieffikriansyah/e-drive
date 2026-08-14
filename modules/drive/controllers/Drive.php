@@ -41,6 +41,10 @@ class Drive extends Controller {
 
         $folder_id = isset($_GET['folder']) ? (int)$_GET['folder'] : null;
 
+        // Normalize legacy parent_id / folder_id = 0 to NULL
+        $this->db->query("UPDATE folders SET parent_id = NULL WHERE parent_id = 0");
+        $this->db->query("UPDATE documents SET folder_id = NULL WHERE folder_id = 0");
+
         $drive = $this->mod->get_drive_by_id($drive_id);
         if (!$drive) redirect('drive');
 
@@ -71,5 +75,28 @@ class Drive extends Controller {
         ];
 
         $this->load->view('drive/v_view', $data);
+    }
+
+    // Endpoint to get all folders in a drive for Move modal
+    public function get_all_folders($drive_id) {
+        if (!AuthMiddleware::canAccessDrive($drive_id)) {
+            echo json_encode(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+        $folders = $this->mod->get_all_folders_by_drive($drive_id);
+        
+        // Build path map for better display (optional but helpful)
+        // Since we already have 'path' field, we can just return it.
+        $result = [];
+        foreach ($folders as $f) {
+            $result[] = [
+                'id' => $f->id,
+                'name' => $f->name,
+                'path' => $f->path
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['status' => true, 'folders' => $result]);
     }
 }

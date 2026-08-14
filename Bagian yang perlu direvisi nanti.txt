@@ -1,0 +1,10 @@
+| Bagian                             | Kondisi sekarang                                   |
+| ---------------------------------- | -------------------------------------------------- |
+| Cloud → Flowise ketika Cloud error | ❌ Terhenti karena `return` di `catch`              |
+| Context Injection → Flowise        | ❌ Tidak ada                                        |
+| Context Injection → Ollama         | ❌ Tidak ada                                        |
+| Cloud → Smart Fallback             | ❌ Tidak langsung jika Cloud API key ada tapi error |
+| Flowise → Ollama                   | ✅ Ada mekanisme fallback                           |
+| Ollama → Smart Fallback            | ✅ Ada                                              |
+| Data E-Drive diambil live          | ✅ Ya, untuk Cloud                                  |
+| History 10 pesan terakhir          | ✅ Ya                                               |
