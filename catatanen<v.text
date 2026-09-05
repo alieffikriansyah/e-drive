@@ -1,0 +1,50 @@
+ini dari server 
+
+APP_NAME=E-Drive
+APP_ENV=development
+APP_DEBUG=true
+
+DB_HOST=localhost
+DB_NAME=e_drive
+DB_USER=root
+DB_PASS=
+
+BASE_URL=localhost/e-drive/
+
+ONLYOFFICE_URL=http://localhost:8080/
+ONLYOFFICE_SECRET=super_secret_jwt_key_123
+ONLYOFFICE_JWT_SECRET=super_secret_jwt_key_123
+
+# AI Configuration
+FLOWISE_URL=http://localhost:3000
+FLOWISE_API_KEY=
+OLLAMA_URL=http://localhost:11434
+AI_DEFAULT_MODEL=qwen3
+
+
+
+
+
+
+ini dari docker linux
+
+APP_NAME=E-Drive
+APP_ENV=development
+APP_DEBUG=true
+
+DB_HOST=db
+DB_NAME=e_drive
+DB_USER=root
+DB_PASS=
+
+BASE_URL=http://localhost:8080/
+
+ONLYOFFICE_URL=http://localhost:8082/
+ONLYOFFICE_SECRET=super_secret_jwt_key_123
+ONLYOFFICE_JWT_SECRET=super_secret_jwt_key_123
+
+# AI Configuration
+FLOWISE_URL=http://localhost:3000
+FLOWISE_API_KEY=
+OLLAMA_URL=http://localhost:11434
+AI_DEFAULT_MODEL=qwen3

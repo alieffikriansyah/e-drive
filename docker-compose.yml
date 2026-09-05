@@ -1,0 +1,51 @@
+services:
+  web:
+    build: .
+    container_name: e_drive_web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+
+  db:
+    image: mysql:5.7
+    container_name: e_drive_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: e_drive
+    ports:
+      - "3307:3306"
+    volumes:
+      - e_drive_db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: e_drive_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ""
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: e_drive_onlyoffice
+    ports:
+      - "8082:80"
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=super_secret_jwt_key_123
+      - JWT_HEADER=Authorization
+      - JWT_IN_BODY=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  e_drive_db_data:

@@ -211,7 +211,7 @@ if (!function_exists('get_drive_icon')) {
                                                 <button class="w-8 h-8 rounded hover:bg-gray-100 text-blue-600 flex items-center justify-center transition tooltip" data-tip="Preview" onclick="previewFile(<?= $doc->id ?>, '<?= htmlspecialchars(addslashes($doc->name)) ?>', '<?= htmlspecialchars(addslashes($doc->file_path)) ?>')">
                                                     <i class="fa-solid fa-eye text-[13px]"></i>
                                                 </button>
-                                                <?php if (in_array(strtolower($doc->file_type), ['docx', 'xlsx', 'pptx'])): ?>
+                                                <?php if (!empty(Env::get('ONLYOFFICE_URL')) && in_array(strtolower($doc->file_type), ['docx', 'xlsx', 'pptx'])): ?>
                                                 <a href="<?= base_url('onlyoffice/edit/' . $doc->id) ?>" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded hover:bg-orange-50 text-orange-500 flex items-center justify-center transition tooltip" data-tip="Edit di ONLYOFFICE">
                                                     <i class="fa-solid fa-pen-to-square text-[13px]"></i>
                                                 </a>

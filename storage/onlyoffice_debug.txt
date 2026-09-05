@@ -119,3 +119,36 @@ SUCCESS SAVING: C:\xampp\htdocs\e-drive\storage\drives/1/2026/apasaj/LAPORAN PEK
 2026-08-12 11:08:12
 {"key":"5_1786525549","status":4,"actions":[{"type":0,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiI1XzE3ODY1MjU1NDkiLCJzdGF0dXMiOjQsImFjdGlvbnMiOlt7InR5cGUiOjAsInVzZXJpZCI6IjEifV0sImlhdCI6MTc4NjUyNTY5MiwiZXhwIjoxNzg2NTI1OTkyfQ.HKAuOReRom37glcoLtXNST5CgbTxvE72zXVIAaQop8c"}
 
+2026-09-04 19:51:37
+{"key":"186_1788549548","status":1,"users":["1"],"actions":[{"type":1,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiIxODZfMTc4ODU0OTU0OCIsInN0YXR1cyI6MSwidXNlcnMiOlsiMSJdLCJhY3Rpb25zIjpbeyJ0eXBlIjoxLCJ1c2VyaWQiOiIxIn1dLCJpYXQiOjE3ODg1NTE0OTcsImV4cCI6MTc4ODU1MTc5N30.doUBT5ebbu-nG6_8IvspLfwwO7Lq6wyO-lt3PwCWUgI"}
+
+2026-09-04 19:51:46
+{"key":"186_1788549548","status":6,"url":"http://localhost:8082/cache/files/data/186_1788549548_9569/output.docx/output.docx?md5=aqdFwmpRCnGLlEjgYtF7tw&expires=1788552407&shardkey=186_1788549548&filename=output.docx","changesurl":"http://localhost:8082/cache/files/data/186_1788549548_9569/changes.zip/changes.zip?md5=ehT9bsCKV2fytU6nkP_pXQ&expires=1788552407&shardkey=186_1788549548&filename=changes.zip","history":{"serverVersion":"9.4.0","changes":[{"documentSha256":"973afe556b60850c787966da28164a8726d8979fbd1bcddcada5c201b424111e","created":"2026-09-04 19:51:42","user":{"id":"1","name":"User"}}]},"users":["1"],"actions":[{"type":2,"userid":"1"}],"lastsave":"2026-09-04T19:51:42.000Z","forcesavetype":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiIxODZfMTc4ODU0OTU0OCIsInN0YXR1cyI6NiwidXJsIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL2NhY2hlL2ZpbGVzL2RhdGEvMTg2XzE3ODg1NDk1NDhfOTU2OS9vdXRwdXQuZG9jeC9vdXRwdXQuZG9jeD9tZDU9YXFkRndtcFJDbkdMbEVqZ1l0Rjd0dyZleHBpcmVzPTE3ODg1NTI0MDcmc2hhcmRrZXk9MTg2XzE3ODg1NDk1NDgmZmlsZW5hbWU9b3V0cHV0LmRvY3giLCJjaGFuZ2VzdXJsIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL2NhY2hlL2ZpbGVzL2RhdGEvMTg2XzE3ODg1NDk1NDhfOTU2OS9jaGFuZ2VzLnppcC9jaGFuZ2VzLnppcD9tZDU9ZWhUOWJzQ0tWMmZ5dFU2bmtQX3BYUSZleHBpcmVzPTE3ODg1NTI0MDcmc2hhcmRrZXk9MTg2XzE3ODg1NDk1NDgmZmlsZW5hbWU9Y2hhbmdlcy56aXAiLCJoaXN0b3J5Ijp7InNlcnZlclZlcnNpb24iOiI5LjQuMCIsImNoYW5nZXMiOlt7ImRvY3VtZW50U2hhMjU2IjoiOTczYWZlNTU2YjYwODUwYzc4Nzk2NmRhMjgxNjRhODcyNmQ4OTc5ZmJkMWJjZGRjYWRhNWMyMDFiNDI0MTExZSIsImNyZWF0ZWQiOiIyMDI2LTA5LTA0IDE5OjUxOjQyIiwidXNlciI6eyJpZCI6IjEiLCJuYW1lIjoiVXNlciJ9fV19LCJ1c2VycyI6WyIxIl0sImFjdGlvbnMiOlt7InR5cGUiOjIsInVzZXJpZCI6IjEifV0sImxhc3RzYXZlIjoiMjAyNi0wOS0wNFQxOTo1MTo0Mi4wMDBaIiwiZm9yY2VzYXZldHlwZSI6MSwiZmlsZXR5cGUiOiJkb2N4IiwiaWF0IjoxNzg4NTUxNTA2LCJleHAiOjE3ODg1NTE4MDZ9.cTZ_BkfAMYYBjUrtRcq2pM0628eaXjcVASScLMuPpjc","filetype":"docx"}
+
+2026-09-04 19:51:55
+{"key":"186_1788549548","status":2,"url":"http://localhost:8082/cache/files/data/186_1788549548_748/output.docx/output.docx?md5=t8AWDaCbdf_oJAcbuAaUOg&expires=1788552416&shardkey=186_1788549548&filename=output.docx","changesurl":"http://localhost:8082/cache/files/data/186_1788549548_748/changes.zip/changes.zip?md5=xJ7Yi9BLRnU4hwdEx5Uk_w&expires=1788552416&shardkey=186_1788549548&filename=changes.zip","history":{"serverVersion":"9.4.0","changes":[{"documentSha256":"973afe556b60850c787966da28164a8726d8979fbd1bcddcada5c201b424111e","created":"2026-09-04 19:51:42","user":{"id":"1","name":"User"}}]},"users":["1"],"actions":[{"type":0,"userid":"1"}],"lastsave":"2026-09-04T19:51:42.000Z","notmodified":true,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiIxODZfMTc4ODU0OTU0OCIsInN0YXR1cyI6MiwidXJsIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL2NhY2hlL2ZpbGVzL2RhdGEvMTg2XzE3ODg1NDk1NDhfNzQ4L291dHB1dC5kb2N4L291dHB1dC5kb2N4P21kNT10OEFXRGFDYmRmX29KQWNidUFhVU9nJmV4cGlyZXM9MTc4ODU1MjQxNiZzaGFyZGtleT0xODZfMTc4ODU0OTU0OCZmaWxlbmFtZT1vdXRwdXQuZG9jeCIsImNoYW5nZXN1cmwiOiJodHRwOi8vbG9jYWxob3N0OjgwODIvY2FjaGUvZmlsZXMvZGF0YS8xODZfMTc4ODU0OTU0OF83NDgvY2hhbmdlcy56aXAvY2hhbmdlcy56aXA_bWQ1PXhKN1lpOUJMUm5VNGh3ZEV4NVVrX3cmZXhwaXJlcz0xNzg4NTUyNDE2JnNoYXJka2V5PTE4Nl8xNzg4NTQ5NTQ4JmZpbGVuYW1lPWNoYW5nZXMuemlwIiwiaGlzdG9yeSI6eyJzZXJ2ZXJWZXJzaW9uIjoiOS40LjAiLCJjaGFuZ2VzIjpbeyJkb2N1bWVudFNoYTI1NiI6Ijk3M2FmZTU1NmI2MDg1MGM3ODc5NjZkYTI4MTY0YTg3MjZkODk3OWZiZDFiY2RkY2FkYTVjMjAxYjQyNDExMWUiLCJjcmVhdGVkIjoiMjAyNi0wOS0wNCAxOTo1MTo0MiIsInVzZXIiOnsiaWQiOiIxIiwibmFtZSI6IlVzZXIifX1dfSwidXNlcnMiOlsiMSJdLCJhY3Rpb25zIjpbeyJ0eXBlIjowLCJ1c2VyaWQiOiIxIn1dLCJsYXN0c2F2ZSI6IjIwMjYtMDktMDRUMTk6NTE6NDIuMDAwWiIsIm5vdG1vZGlmaWVkIjp0cnVlLCJmaWxldHlwZSI6ImRvY3giLCJpYXQiOjE3ODg1NTE1MTUsImV4cCI6MTc4ODU1MTgxNX0.vUFvxBLwogAc2jmiP1l05Wk0Pt6j0wK5pHuBFeU-g58","filetype":"docx"}
+
+FAILED TO FETCH: http://localhost:8082/cache/files/data/186_1788549548_748/output.docx/output.docx?md5=t8AWDaCbdf_oJAcbuAaUOg&expires=1788552416&shardkey=186_1788549548&filename=output.docx - Array
+(
+    [type] => 2
+    [message] => file_get_contents(http://localhost:8082/cache/files/data/186_1788549548_748/output.docx/output.docx?md5=t8AWDaCbdf_oJAcbuAaUOg&amp;expires=1788552416&amp;shardkey=186_1788549548&amp;filename=output.docx): failed to open stream: Connection refused
+    [file] => /var/www/html/modules/onlyoffice/controllers/Onlyoffice.php
+    [line] => 170
+)
+
+
+2026-09-04 19:52:07
+{"key":"186_1788549548","status":1,"users":["1"],"actions":[{"type":1,"userid":"1"}],"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiIxODZfMTc4ODU0OTU0OCIsInN0YXR1cyI6MSwidXNlcnMiOlsiMSJdLCJhY3Rpb25zIjpbeyJ0eXBlIjoxLCJ1c2VyaWQiOiIxIn1dLCJpYXQiOjE3ODg1NTE1MjcsImV4cCI6MTc4ODU1MTgyN30.GYw9bQpbBwPtkR1xrPtbq5tU7cPLc9WA9BSrcdwzxC8"}
+
+2026-09-04 19:52:33
+{"key":"186_1788549548","status":2,"url":"http://localhost:8082/cache/files/data/186_1788549548_1663/output.docx/output.docx?md5=KKYRITGDtWdI25JCzcsoMA&expires=1788552454&shardkey=186_1788549548&filename=output.docx","history":{},"users":["1"],"actions":[{"type":0,"userid":"1"}],"lastsave":"2026-09-04T19:52:33.743Z","notmodified":null,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXkiOiIxODZfMTc4ODU0OTU0OCIsInN0YXR1cyI6MiwidXJsIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgyL2NhY2hlL2ZpbGVzL2RhdGEvMTg2XzE3ODg1NDk1NDhfMTY2My9vdXRwdXQuZG9jeC9vdXRwdXQuZG9jeD9tZDU9S0tZUklUR0R0V2RJMjVKQ3pjc29NQSZleHBpcmVzPTE3ODg1NTI0NTQmc2hhcmRrZXk9MTg2XzE3ODg1NDk1NDgmZmlsZW5hbWU9b3V0cHV0LmRvY3giLCJoaXN0b3J5Ijp7fSwidXNlcnMiOlsiMSJdLCJhY3Rpb25zIjpbeyJ0eXBlIjowLCJ1c2VyaWQiOiIxIn1dLCJsYXN0c2F2ZSI6IjIwMjYtMDktMDRUMTk6NTI6MzMuNzQzWiIsIm5vdG1vZGlmaWVkIjpudWxsLCJmaWxldHlwZSI6ImRvY3giLCJpYXQiOjE3ODg1NTE1NTMsImV4cCI6MTc4ODU1MTg1M30.QP7-0DCB4vNV2mKxLPbefDaPLD3LaVIEYEaOAdWqfS4","filetype":"docx"}
+
+FAILED TO FETCH: http://localhost:8082/cache/files/data/186_1788549548_1663/output.docx/output.docx?md5=KKYRITGDtWdI25JCzcsoMA&expires=1788552454&shardkey=186_1788549548&filename=output.docx - Array
+(
+    [type] => 2
+    [message] => file_get_contents(http://localhost:8082/cache/files/data/186_1788549548_1663/output.docx/output.docx?md5=KKYRITGDtWdI25JCzcsoMA&amp;expires=1788552454&amp;shardkey=186_1788549548&amp;filename=output.docx): failed to open stream: Connection refused
+    [file] => /var/www/html/modules/onlyoffice/controllers/Onlyoffice.php
+    [line] => 170
+)
+
+

@@ -40,11 +40,14 @@ class Onlyoffice extends Controller {
             $callback_url = 'http://' . $callback_url;
         }
 
-        // VERY IMPORTANT for Docker on Windows:
-        // ONLYOFFICE Server needs to download the file from XAMPP. If the URL is 'localhost', Docker will try to download from inside its own container.
-        // We must change 'localhost' or '127.0.0.1' to 'host.docker.internal' so Docker knows to look outside to the Windows host.
-        $download_url = str_replace(['localhost', '127.0.0.1'], 'host.docker.internal', $download_url);
-        $callback_url = str_replace(['localhost', '127.0.0.1'], 'host.docker.internal', $callback_url);
+        // ONLYOFFICE Server needs to download the file from the web server.
+        // Jika ONLYOFFICE berjalan di dalam Docker (misal di Windows), gunakan host.docker.internal.
+        // Jika ONLYOFFICE berjalan native di host (misal via Snap di Linux), gunakan localhost secara langsung.
+        $use_docker_host = Env::get('ONLYOFFICE_USE_DOCKER_HOST');
+        if ($use_docker_host === 'true' || ($use_docker_host === null && PHP_OS_FAMILY === 'Windows')) {
+            $download_url = str_replace(['localhost', '127.0.0.1'], 'host.docker.internal', $download_url);
+            $callback_url = str_replace(['localhost', '127.0.0.1'], 'host.docker.internal', $callback_url);
+        }
 
         $doc_key = $doc_id . '_' . strtotime($doc->updated_at ?? $doc->created_at);
 
