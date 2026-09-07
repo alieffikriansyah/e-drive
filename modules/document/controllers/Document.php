@@ -736,4 +736,22 @@ class Document extends Controller
 
         echo json_encode(['status' => true, 'message' => 'File berhasil dipindahkan.']);
     }
+
+    public function info($id)
+    {
+        header('Content-Type: application/json');
+        $doc = $this->mod->get_document_by_id((int)$id);
+        if (!$doc) {
+            echo json_encode(['status' => false, 'message' => 'Dokumen tidak ditemukan.']);
+            return;
+        }
+
+        if (!AuthMiddleware::canAccessDrive($doc->drive_id)) {
+            echo json_encode(['status' => false, 'message' => 'Akses ditolak.']);
+            return;
+        }
+
+        echo json_encode(['status' => true, 'data' => $doc]);
+    }
 }
+

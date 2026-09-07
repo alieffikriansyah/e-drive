@@ -175,7 +175,7 @@ if (!function_exists('get_drive_icon')) {
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($documents as $doc): ?>
-                                    <tr class="group file-row" data-filename="<?= strtolower(htmlspecialchars($doc->name . '.' . $doc->file_type)) ?>">
+                                    <tr class="group file-row" data-doc-id="<?= $doc->id ?>" data-doc-name="<?= htmlspecialchars($doc->name) ?>" data-doc-path="<?= htmlspecialchars($doc->file_path) ?>" data-filename="<?= strtolower(htmlspecialchars($doc->name . '.' . $doc->file_type)) ?>">
                                         <td class="text-center">
                                             <button class="text-gray-300 hover:text-yellow-400 transition-colors" title="Bintangi">
                                                 <i class="fa-regular fa-star"></i>
@@ -543,13 +543,20 @@ if (!function_exists('get_drive_icon')) {
 
     // --- Actions ---
     function previewFile(id, name, path) {
+        // Update URL address bar to include ?preview=id
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.get('preview') !== String(id)) {
+            currentUrl.searchParams.set('preview', id);
+            history.pushState({ previewId: id }, '', currentUrl.toString());
+        }
+
         document.getElementById('preview-modal-title').innerText = name;
         document.getElementById('preview-modal').classList.remove('hidden');
         
         const contentArea = document.getElementById('preview-content-area');
         contentArea.innerHTML = '<div class="text-center p-10"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-edrive-primary"></i><p class="mt-4 text-edrive-muted">Memuat pratinjau...</p></div>';
         
-        const ext = path.split('.').pop().toLowerCase();
+        const ext = path ? path.split('.').pop().toLowerCase() : '';
         const url = BASE_URL + 'document/preview/' + id;
         
         setTimeout(() => {
@@ -572,13 +579,65 @@ if (!function_exists('get_drive_icon')) {
                         </button>
                     </div>`;
             }
-        }, 500);
+        }, 300);
     }
 
     function closePreview() {
         document.getElementById('preview-modal').classList.add('hidden');
         document.getElementById('preview-content-area').innerHTML = '';
+        
+        // Remove preview parameter from URL & pushState back to folder URL
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has('preview')) {
+            currentUrl.searchParams.delete('preview');
+            history.pushState({ previewId: null }, '', currentUrl.toString());
+        }
     }
+
+    function closePreviewSilently() {
+        document.getElementById('preview-modal').classList.add('hidden');
+        document.getElementById('preview-content-area').innerHTML = '';
+    }
+
+    function openPreviewById(id) {
+        const docRow = document.querySelector(`.file-row[data-doc-id="${id}"]`);
+        if (docRow) {
+            const name = docRow.getAttribute('data-doc-name');
+            const path = docRow.getAttribute('data-doc-path');
+            previewFile(id, name, path);
+            return;
+        }
+
+        fetch(BASE_URL + 'document/info/' + id)
+            .then(res => res.json())
+            .then(res => {
+                if (res.status && res.data) {
+                    previewFile(res.data.id, res.data.name, res.data.file_path);
+                }
+            })
+            .catch(err => console.error('Gagal memuat dokumen:', err));
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewId = urlParams.get('preview');
+        if (previewId) {
+            openPreviewById(previewId);
+        }
+    });
+
+    window.addEventListener('popstate', function(e) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const previewId = urlParams.get('preview');
+        if (previewId) {
+            openPreviewById(previewId);
+        } else {
+            const modal = document.getElementById('preview-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closePreviewSilently();
+            }
+        }
+    });
     function downloadFile(id) { window.location.href = BASE_URL + 'document/download/' + id; }
     function shareFile(id) { showInfo('Share file ' + id + ' segera hadir (Phase 7)'); }
     function showVersions(id) { showInfo('History versi file ' + id + ' segera hadir (Phase 7)'); }
@@ -906,7 +965,7 @@ if (!function_exists('get_drive_icon')) {
 </div>
 
 <!-- Preview Modal -->
-<div id="preview-modal" class="fixed inset-0 bg-gray-900/90 z-[100] hidden flex flex-col backdrop-blur-sm transition-all duration-300">
+<div id="preview-modal" class="fixed inset-0 bg-gray-900/90 z-[100] hidden flex flex-col backdrop-blur-sm transition-all duration-300" onclick="if(event.target === this || event.target.id === 'preview-content-area') closePreview()">
     <div class="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-700 text-white">
         <h3 id="preview-modal-title" class="font-medium text-lg truncate pr-4">Preview Document</h3>
         <button onclick="closePreview()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-800 transition">
